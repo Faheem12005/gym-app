@@ -9,6 +9,18 @@ generator client {
   output   = "../generated/prisma"
 }
 
+enum MuscleGroup {
+  CHEST
+  BACK
+  LEGS
+  SHOULDERS
+  BICEPS
+  TRICEPS
+  CORE
+  GLUTES
+  FULL_BODY
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -117,6 +129,7 @@ model WorkoutPlan {
   name        String
   createdAt   DateTime     @default(now())
   workoutDays WorkoutDay[]
+  muscleGroups MuscleGroup[]
 }
 
 model WorkoutDay {
@@ -136,6 +149,7 @@ model Exercise {
   createdById     String?
   workoutDayLinks WorkoutDayExercise[]
   workoutLogs     WorkoutLog[]
+  muscleGroups    MuscleGroup[]
 }
 
 model WorkoutDayExercise {
