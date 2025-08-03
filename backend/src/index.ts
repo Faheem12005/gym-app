@@ -10,14 +10,14 @@ const app = express();
 app.use(express.json());
 
 
-app.use('/user', userRoutes);
-app.use('/workout', workoutRoutes);
-app.use('/workout-log', workoutLogRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/workout', workoutRoutes);
+app.use('/api/workout-log', workoutLogRoutes);
 // app.use('/seed', seedRoutes);
 
 
 // Health check route
-app.get('/health', (req: any, res: any) => {
+app.get('/api/health', (req: any, res: any) => {
   res.json({ status: 'ok' });
 });
 
