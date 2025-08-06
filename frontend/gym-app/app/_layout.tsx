@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { SessionProvider } from '@/app/auth/authContext';
+import { SessionProvider } from '@/auth/authContext';
 
 
 

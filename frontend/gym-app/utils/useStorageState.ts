@@ -1,58 +1,66 @@
-import  { useEffect, useCallback, useReducer } from 'react';
+import { useEffect, useCallback, useReducer } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-type UseStateHook<T> = [[boolean, T | null], (value: T | null) => void];
+type UseStorageState<T> = [[boolean, T | null], (value: T | null) => void];
 
 function useAsyncState<T>(
   initialValue: [boolean, T | null] = [true, null],
-): UseStateHook<T> {
+): UseStorageState<T> {
   return useReducer(
-    (state: [boolean, T | null], action: T | null = null): [boolean, T | null] => [false, action],
+    (_: [boolean, T | null], action: T | null = null): [boolean, T | null] => [false, action],
     initialValue
-  ) as UseStateHook<T>;
+  ) as UseStorageState<T>;
 }
 
-export async function setStorageItemAsync(key: string, value: string | null) {
-  if (process.env.EXPO_OS === 'web') {
-    if (value === null) {
-      localStorage.removeItem(key);
-    } else {
-      localStorage.setItem(key, value);
+async function setStorageItemAsync<T>(key: string, value: T | null) {
+  const serialized = value === null ? null : JSON.stringify(value);
+
+  if (Platform.OS === 'web') {
+    if (typeof localStorage !== 'undefined') {
+      if (serialized === null) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, serialized);
+      }
     }
   } else {
-    if (value == null) {
+    if (serialized === null) {
       await SecureStore.deleteItemAsync(key);
     } else {
-      await SecureStore.setItemAsync(key, value);
+      await SecureStore.setItemAsync(key, serialized);
     }
   }
 }
 
-export function useStorageState(key: string): UseStateHook<string> {
-  // Public
-  const [state, setState] = useAsyncState<string>();
+export function useStorageState<T>(key: string): UseStorageState<T> {
+  const [state, setState] = useAsyncState<T>();
 
-  // Get
+  // Load stored value on mount
   useEffect(() => {
-    if (Platform.OS === 'web') {
+    const load = async () => {
       try {
-        if (typeof localStorage !== 'undefined') {
-          setState(localStorage.getItem(key));
+        let raw: string | null;
+        if (Platform.OS === 'web') {
+          raw = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+        } else {
+          raw = await SecureStore.getItemAsync(key);
         }
-      } catch (e) {
-        console.error('Local storage is unavailable:', e);
+
+        const parsed: T | null = raw ? JSON.parse(raw) : null;
+        setState(parsed);
+      } catch (err) {
+        console.error(`Error loading ${key}:`, err);
+        setState(null);
       }
-    } else {
-      SecureStore.getItemAsync(key).then(value => {
-        setState(value);
-      });
-    }
+    };
+
+    load();
   }, [key]);
 
-  // Set
+  // Save value
   const setValue = useCallback(
-    (value: string | null) => {
+    (value: T | null) => {
       setState(value);
       setStorageItemAsync(key, value);
     },

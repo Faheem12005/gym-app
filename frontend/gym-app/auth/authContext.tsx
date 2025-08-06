@@ -2,10 +2,27 @@ import { use, createContext, type PropsWithChildren } from 'react';
 import { useStorageState } from '@/utils/useStorageState';
 import api from '@/utils/api';
 
+export type AuthResponse = {
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    emailVerified: string | null;
+    image: string | null;
+    passwordHash: string;
+    provider: string | null;
+    providerId: string | null;
+    createdAt: string;  // ISO 8601 date string
+    updatedAt: string;
+  };
+  token: string;
+};
+
+
 const AuthContext = createContext<{
   signIn: () => void;
   signOut: () => void;
-  session?: string | null;
+  session?: AuthResponse | null;
   isLoading: boolean;
 }>({
   signIn: () => null,
@@ -25,7 +42,7 @@ export function useSession() {
 }
 
 export function SessionProvider({ children }: PropsWithChildren) {
-  const [[isLoading, session], setSession] = useStorageState('session');
+  const [[isLoading, session], setSession] = useStorageState<AuthResponse>('session');
 
   return (
     <AuthContext.Provider
@@ -33,10 +50,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
         signIn: async () => {
           try {
             const response = await api.post('/user/login', {
+              //TO DO
                 email: 'test@gmail.com',
                 password: '123'
             });
-            setSession(response.data.token);
+            setSession(response.data);
           } catch(error) {
             console.error('Login failed:', error);
           }

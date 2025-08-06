@@ -1,10 +1,15 @@
 
 import { Request, Response } from 'express';
 import prisma from '../../../libs/prisma';
+import { JwtPayload } from 'jsonwebtoken';
 
-export const createWorkoutPlan = async (req: Request, res: Response) => {
+type AuthenticatedRequest = Request & {
+  user?: JwtPayload & { userId: string };
+};
+
+export const createWorkoutPlan = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { userId, name } = req.body;
+    const { userId, name, muscleGroups } = req.body;
     if (!userId || !name) {
       return res.status(400).json({ error: 'Missing required fields.' });
     }
@@ -12,16 +17,38 @@ export const createWorkoutPlan = async (req: Request, res: Response) => {
       data: {
         userId,
         name,
+        muscleGroups
       }
     });
     res.status(201).json(plan);
+    console.log("Workout plan created successfully:", plan);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     res.status(500).json({ error: errorMessage });
   }
 };
 
-export const getWorkoutPlan = async (req: Request, res: Response) => {
+export const getAllWorkoutPlansForUser = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required.' });
+    }
+    const plans = await prisma.workoutPlan.findMany({
+      where: { userId },
+      include: {
+        workoutDays: {
+          include: { exercises: true }
+        }
+      }
+    });
+    return res.json(plans);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}
+
+export const getWorkoutPlan = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
     const plan = await prisma.workoutPlan.findUnique({
@@ -39,7 +66,7 @@ export const getWorkoutPlan = async (req: Request, res: Response) => {
   }
 };
 
-export const updateWorkoutPlan = async (req: Request, res: Response) => {
+export const updateWorkoutPlan = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
@@ -53,7 +80,7 @@ export const updateWorkoutPlan = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteWorkoutPlan = async (req: Request, res: Response) => {
+export const deleteWorkoutPlan = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
     // Cascade delete workoutDays and their exercises

@@ -9,6 +9,11 @@ generator client {
   output   = "../generated/prisma"
 }
 
+generator zod {
+  provider       = "zod-prisma-types"
+  createRelationValuesTypes = true
+}
+
 enum MuscleGroup {
   CHEST
   BACK

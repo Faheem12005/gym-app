@@ -2,7 +2,7 @@ import { Tabs, Redirect } from "expo-router";
 import { Text } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import { useSession } from "@/app/auth/authContext";
+import { useSession } from "@/auth/authContext";
 
 export default function TabLayout() {
   const { session, isLoading } = useSession();
@@ -15,11 +15,20 @@ export default function TabLayout() {
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: "blue" }}>
       <Tabs.Screen
-        name="(home)"
+        name="(training)"
         options={{
-          title: "Home",
+          title: "Training",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="home" color={color} size={24} />
+            <FontAwesome5 name="dumbbell" color={color} size={24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="(custom)"
+        options={{
+          title: "Custom",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome5 name="pencil-alt" color={color} size={24} />
           ),
         }}
       />
@@ -41,15 +50,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="(training)"
-        options={{
-          title: "Training",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome5 name="dumbbell" color={color} size={24} />
-          ),
-        }}
-      />
+
     </Tabs>
   );
 }

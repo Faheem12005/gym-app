@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { useSession } from '@/app/auth/authContext';
+import { useSession } from '@/auth/authContext';
 
 export default function SignIn() {
   const { signIn } = useSession();
@@ -12,7 +12,7 @@ export default function SignIn() {
           await signIn();
           // Navigate after signing in. You may want to tweak this to ensure sign-in is
           // successful before navigating.
-          router.replace('/');
+          router.replace('/training');
         }}>
         Sign In
       </Text>
