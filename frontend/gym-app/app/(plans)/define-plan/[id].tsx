@@ -1,43 +1,19 @@
-import { View, Text, SectionList, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import api from '@/utils/api';
 import { useEffect, useState } from 'react';
-import { WorkoutPlanWithRelations, Exercise } from '@/app/types/generated/zod';
+import { WorkoutPlanWithRelations } from '@/app/types/generated/zod';
 import { useSession } from '@/auth/authContext';
 import WeeklyScheduleView from '@/components/WeeklyScheduleView';
-
-//TO DO
-//convert exercise view into a modal
-
-interface Section {
-  title: string;
-  data: Exercise[];
-}
 
 export default function CreatePlanPage() {
   const { id } = useLocalSearchParams();
   const { session } = useSession();
   const [plan, setPlan] = useState<null | WorkoutPlanWithRelations>(null);
-  const [exercises, setExercises] = useState<Section[] | null>(null);
   const [loading, setLoading] = useState(true);
-  // const [addedExercises, setAddedExercises] = useState<Exercise[] | []>([]);
 
-  
 
   useEffect(() => {
-    const fetchExercises = async () => {
-      try {
-        const response = await api.get('/exercises', {
-          headers: {
-            Authorization: `Bearer ${session?.token}`,
-          },
-        });
-        setExercises(response.data);
-      } catch (error) {
-        console.error('Error fetching Exercises', error);
-      }
-    };
-
     const fetchPlan = async () => {
       try {
         const response = await api.get(`/workout/${id}`, {
@@ -45,25 +21,14 @@ export default function CreatePlanPage() {
             Authorization: `Bearer ${session?.token}`,
           },
         });
-        console.log('Fetched plan:', response.data);
         setPlan(response.data);
       } catch (error) {
         console.error('Error fetching workout plan:', error);
-      }
-    };
-
-    const fetchExercisesAndPlans = async () => {
-      try {
-        await fetchExercises();
-        await fetchPlan();
-      } catch (error) {
-        console.error('Error fetching data', error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchExercisesAndPlans();
+    fetchPlan();
   }, []);
 
   if (loading) {
@@ -78,17 +43,6 @@ export default function CreatePlanPage() {
     <View style={styles.container}>
       <Text style={styles.heading}>{plan?.name}</Text>
       <Text style={styles.subheading}>{plan?.id}</Text>
-    {/* Exercises that are already added come here in exercise view */}
-      {/* <SectionList
-        sections={exercises!}
-        keyExtractor={(item) => item.id}
-        renderSectionHeader={({ section }) => (
-          <Text style={styles.sectionHeader}>{section.title}</Text>
-        )}
-        renderItem={({ item }) => (
-          <Text style={styles.exerciseItem}>{item.name}</Text>
-        )}
-      /> */}
       <WeeklyScheduleView planId={id} workoutDays={plan?.workoutDays ?? []}/>
 
     </View>

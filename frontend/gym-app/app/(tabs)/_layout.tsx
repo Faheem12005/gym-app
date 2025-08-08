@@ -13,7 +13,7 @@ export default function TabLayout() {
     return <Redirect href="/sign-in" />
   }
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: "blue" }}>
+    <Tabs screenOptions={{ tabBarActiveTintColor: "blue", headerShown: false }}>
       <Tabs.Screen
         name="(training)"
         options={{

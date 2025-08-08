@@ -1,20 +1,37 @@
-import { Pressable, StyleSheet, PressableProps } from "react-native";
+import { Pressable, StyleSheet, PressableProps, ViewStyle, PressableStateCallbackType } from "react-native";
 import React from "react";
 import { Colors } from "@/constants/Colors";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export type ThemedButtonProps = PressableProps & {
-  href: string;
   children: React.ReactNode;
+  lightColor?: string;
+  darkColor?: string;
   onPress: () => void;
 };
 
-export default function ThemedButton({ href, children, onPress, ...rest }: ThemedButtonProps) {
+export default function ThemedButton({
+  children,
+  onPress,
+  style,
+  lightColor,
+  darkColor,
+  ...rest
+}: ThemedButtonProps) {
+  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, "primary");
+
   return (
-    <Pressable 
-     style={[
-      styles.button,
-     ]}
-     onPress={async () => await onPress()}
+    <Pressable
+      style={(state: PressableStateCallbackType) => {
+        const baseStyle: ViewStyle = { backgroundColor };
+
+        const resolvedStyle =
+          typeof style === "function" ? style(state) : style;
+
+        return [baseStyle, styles.button, resolvedStyle];
+      }}
+      onPress={async () => await onPress()}
+      {...rest}
     >
       {children}
     </Pressable>
@@ -23,15 +40,11 @@ export default function ThemedButton({ href, children, onPress, ...rest }: Theme
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: Colors.light.primary,
+    backgroundColor: Colors.light.tint,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    width: "35%",
     alignItems: "center",
     justifyContent: "center",
-  },
-  pressed: {
-    opacity: 0.8,
   },
 });

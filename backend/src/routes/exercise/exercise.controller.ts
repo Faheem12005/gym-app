@@ -10,7 +10,6 @@ export const getAllExercises = async (req: Request, res: Response) => {
             return res.status(401).json({ error: 'Authorization header missing' });
         }
         const token = authHeader.split(' ')[1];
-        const sections: { title: string, data: typeof exercises}[] = [];
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
         const userId = decoded.userId;
         const exercises = await prisma.exercise.findMany({

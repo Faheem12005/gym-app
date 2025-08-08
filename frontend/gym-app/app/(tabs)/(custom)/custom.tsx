@@ -6,6 +6,7 @@ import api from "@/utils/api";
 import { useEffect, useState } from "react";
 import { Colors } from "@/constants/Colors";
 import { WorkoutPlan } from "@/app/types/generated/zod";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 export default function CustomPage() {
   const router = useRouter();
@@ -35,19 +36,6 @@ export default function CustomPage() {
     try {
       //TO DO
       const user = session?.user;
-      // await api.post(
-      //   "/workout/create",
-      //   {
-      //     userId: user?.id,
-      //     name: "My Workout Plan",
-      //     muscleGroups: ["CHEST", "BACK"],
-      //   },
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${session?.token}`,
-      //     },
-      //   }
-      // );
       router.push("/define-plan/cmdwrr0fj0001imkqzfw51yl3");
     } catch (error) {
       console.log("Error creating workout plan:", error);
@@ -59,9 +47,10 @@ export default function CustomPage() {
   }
 
   return (
-    <View>
-      <ThemedButton href="/create-plan" onPress={onPress}>
-        <Text>create plan</Text>
+    <View style={{ flex: 1, padding: 15 }}>
+      <ThemedButton style={styles.addButton} onPress={onPress}>
+        <AntDesign name="plus" size={20}/>
+        <Text>NEW PLAN</Text>
       </ThemedButton>
       <FlatList
       ItemSeparatorComponent={() => <View style={{ height: 10, backgroundColor: Colors.light.background }} />}
@@ -83,4 +72,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
   },
+  addButton: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 10,
+    width: 200,
+    position: 'absolute',
+    bottom: 15,
+    right: 15,
+  }
 });

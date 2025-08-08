@@ -1,4 +1,4 @@
-import { Prisma } from '../../../generated/prisma';
+import { Exercise } from '../../../generated/prisma';
 import { Request, Response } from 'express';
 import prisma from '../../../libs/prisma';
 
@@ -10,17 +10,11 @@ export const createWorkoutDay = async (req: Request, res: Response) => {
     }
     const workoutDay = await prisma.workoutDay.create({
       data: {
-        planId,
-        dayOfWeek,
+        ...req.body,
         exercises: {
-          create: exercises.map((ex: Prisma.WorkoutDayExerciseCreateInput) => ({
-            order: ex.order,
-            sets: ex.sets,
-            reps: ex.reps,
-            restSeconds: ex.restSeconds,
-            exercise: {
-              connect: { id: ex.id }
-            }
+          create: req.body.exercises.map((ex: Exercise) => ({
+            ...ex,
+            exercise: { connect: { id: ex.id } }
           }))
         }
       },
@@ -49,7 +43,7 @@ export const getWorkoutDay = async (req: Request, res: Response) => {
 export const updateWorkoutDay = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { dayOfWeek, exercises } = req.body;
+    const { dayOfWeek } = req.body;
     const workoutDay = await prisma.workoutDay.update({
       where: { id },
       data: {

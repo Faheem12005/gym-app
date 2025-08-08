@@ -20,7 +20,7 @@ export type AuthResponse = {
 
 
 const AuthContext = createContext<{
-  signIn: () => void;
+  signIn: (email: string, password: string) => void;
   signOut: () => void;
   session?: AuthResponse | null;
   isLoading: boolean;
@@ -47,12 +47,12 @@ export function SessionProvider({ children }: PropsWithChildren) {
   return (
     <AuthContext.Provider
       value={{
-        signIn: async () => {
+        signIn: async (email: string, password: string) => {
           try {
             const response = await api.post('/user/login', {
               //TO DO
-                email: 'test@gmail.com',
-                password: '123'
+                email,
+                password
             });
             setSession(response.data);
           } catch(error) {
