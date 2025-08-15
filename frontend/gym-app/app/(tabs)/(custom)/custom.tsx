@@ -1,5 +1,7 @@
-import ThemedButton from "@/components/ThemedButton";
-import { Text, FlatList, StyleSheet, View } from "react-native";
+import { Box } from "@/components/ui/box";
+import { Button, ButtonText, ButtonSpinner } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import { FlatList } from "react-native";
 import { useRouter } from "expo-router";
 import { useSession } from "@/auth/authContext";
 import api from "@/utils/api";
@@ -7,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Colors } from "@/constants/Colors";
 import { WorkoutPlan } from "@/app/types/generated/zod";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function CustomPage() {
   const router = useRouter();
@@ -30,12 +33,10 @@ export default function CustomPage() {
       }
     };
     fetchWorkoutPlans();
-  }, []);
+  }, [session?.token]);
 
   const onPress = async () => {
     try {
-      //TO DO
-      const user = session?.user;
       router.push("/define-plan/cmdwrr0fj0001imkqzfw51yl3");
     } catch (error) {
       console.log("Error creating workout plan:", error);
@@ -43,42 +44,47 @@ export default function CustomPage() {
   };
 
   if (loading) {
-    return <Text>Loading...</Text>;
+    return (
+      <Box className="flex-1 justify-center items-center">
+        <Spinner size="large" color={Colors.dark.background} />
+      </Box>
+    );
   }
 
   return (
-    <View style={{ flex: 1, padding: 15 }}>
-      <ThemedButton style={styles.addButton} onPress={onPress}>
-        <AntDesign name="plus" size={20}/>
-        <Text>NEW PLAN</Text>
-      </ThemedButton>
+    <Box className="flex-1 p-4">
+      {loading ? (
+        <Button
+          className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-4 right-4 z-10"
+          size="lg"
+          action="primary"
+          disabled
+        >
+          <ButtonSpinner className="mr-2" />
+          <ButtonText className="text-app-light-background text-sm">Loading...</ButtonText>
+        </Button>
+      ) : (
+        <Button
+          className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-4 right-4 z-10"
+          onPress={onPress}
+          size="lg"
+          action="primary"
+        >
+          <AntDesign name="plus" color={Colors.light.background} size={18} />
+          <ButtonText className="text-app-light-background text-sm">NEW PLAN</ButtonText>
+        </Button>
+      )}
       <FlatList
-      ItemSeparatorComponent={() => <View style={{ height: 10, backgroundColor: Colors.light.background }} />}
+        ItemSeparatorComponent={() => (
+          <Box className="h-3" />
+        )}
         data={workoutPlans}
         renderItem={({ item }) => (
-          <Text style={styles.container}>{item.name}</Text>
+          <Box className="bg-black p-5 w-full rounded-lg justify-center items-center">
+            <Text size="md" bold className="text-white tracking-wide">{item.name}</Text>
+          </Box>
         )}
       />
-    </View>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.light.tint,
-    padding: 20,
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-  },
-  addButton: {
-    display: 'flex',
-    flexDirection: 'row',
-    gap: 10,
-    width: 200,
-    position: 'absolute',
-    bottom: 15,
-    right: 15,
-  }
-});

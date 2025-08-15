@@ -1,16 +1,35 @@
-import { StyleSheet, View, Text } from "react-native";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Box } from "@/components/ui/box";
+import { VStack } from "@/components/ui/vstack";
+import {
+  FormControl,
+  FormControlLabel,
+  FormControlLabelText,
+  FormControlHelper,
+  FormControlHelperText,
+  FormControlError,
+  FormControlErrorText,
+} from "@/components/ui/form-control";
+import { Input, InputField } from "@/components/ui/input";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 import { useSession } from "@/auth/authContext";
-import { router } from "expo-router";
-import ThemedButton from "@/components/ThemedButton";
-import ThemedInput from "@/components/ThemedInput";
+import { useRouter } from "expo-router";
 
 export default function SignIn() {
-  const { signIn } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const { signIn } = useSession();
+  const router = useRouter();
 
-  const onPress = async () => {
+  const handleSignIn = async () => {
+    // Replace with your authentication logic
+    if (!email || !password) {
+      setError("Email and password are required.");
+    } else {
+      setError("");
+    }
     try {
       console.log(email, password);
       await signIn(email, password);
@@ -23,42 +42,63 @@ export default function SignIn() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.inputGroup}>
-        <ThemedInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Enter Email"
-          style={styles.input}
-        />
-        <ThemedInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Enter Password"
-          style={styles.input}
-        />
-      </View>
-      <ThemedButton style={{width: 250}} onPress={onPress}>
-        <Text>Sign In</Text>
-      </ThemedButton>
-    </View>
+    <Box className="flex-1 justify-center items-center bg-background-50">
+      <Box className="w-full max-w-md p-6 rounded-xl shadow-lg bg-background-0">
+        <VStack space="lg">
+          <Text size="2xl" bold className="text-center text-primary-700">
+            Sign In
+          </Text>
+          <FormControl isInvalid={!!error}>
+            <FormControlLabel>
+              <FormControlLabelText>Email</FormControlLabelText>
+            </FormControlLabel>
+            <Input>
+              <InputField
+                type="text"
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </Input>
+            <FormControlHelper>
+            </FormControlHelper>
+          </FormControl>
+          <FormControl isInvalid={!!error}>
+            <FormControlLabel>
+              <FormControlLabelText>Password</FormControlLabelText>
+            </FormControlLabel>
+            <Input>
+              <InputField
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </Input>
+            <FormControlHelper>
+              <FormControlHelperText>
+                Must be at least 6 characters.
+              </FormControlHelperText>
+            </FormControlHelper>
+            {error && (
+              <FormControlError>
+                <FormControlErrorText>{error}</FormControlErrorText>
+              </FormControlError>
+            )}
+          </FormControl>
+          <Button
+            size="lg"
+            action="primary"
+            onPress={handleSignIn}
+            className="mt-4"
+          >
+            <ButtonText>Sign In</ButtonText>
+          </Button>
+        </VStack>
+      </Box>
+    </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    width: 250
-  },
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  inputGroup: {
-    gap: 12, // space between inputs
-    marginBottom: 20,
-  },
-  input: {
-    width: 250, // fixed width
-  },
-});
