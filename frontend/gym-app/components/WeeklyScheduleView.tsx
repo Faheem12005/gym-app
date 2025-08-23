@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import api from "@/utils/api";
 import { useSession } from "@/auth/authContext";
 import { useState } from "react";
+import { VStack } from "@/components/ui/vstack";
 
 interface Props {
   planId: string;
@@ -15,6 +16,7 @@ export default function WeeklyScheduleView({ workoutDays, planId }: Props) {
   const router = useRouter();
   const { session } = useSession();
   const [days, setDays] = useState<WorkoutDayWithRelations[]>(workoutDays);
+
   const onPressWorkoutDay = async (
     isWorkoutDay: boolean,
     existingId: string | null,
@@ -25,7 +27,6 @@ export default function WeeklyScheduleView({ workoutDays, planId }: Props) {
       if (isWorkoutDay && existingId) {
         router.push(`/(plans)/define-day/${existingId}`);
       } else {
-        // Create workout day with empty exercises
         const response = await api.post("/workout-day/create", {
           planId,
           dayOfWeek,
@@ -47,7 +48,7 @@ export default function WeeklyScheduleView({ workoutDays, planId }: Props) {
   };
 
   return (
-    <ScrollView>
+    <VStack space="md">
       {Array.from({ length: 7 }, (_, day) => {
         const matchingDay = days.find((wd) => wd.dayOfWeek === day);
         return (
@@ -60,6 +61,6 @@ export default function WeeklyScheduleView({ workoutDays, planId }: Props) {
           />
         );
       })}
-    </ScrollView>
+    </VStack>
   );
 }

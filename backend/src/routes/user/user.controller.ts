@@ -35,7 +35,6 @@ export const createUser = async (req: any, res: any) => {
 
 export const loginUser = async (req: any, res: any) => {
     try {
-        console.log("Login attempt with body:", req.body);
         const { email, password } = req.body;
         if (!email || !password) {
             return res.status(400).json({ error: "Missing email or password." });
@@ -51,7 +50,6 @@ export const loginUser = async (req: any, res: any) => {
         // Generate JWT token
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1h' });
         res.json({ user, token });
-        console.log("Login successful for user:", user.email);
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ error: (error instanceof Error ? error.message : "Unknown error") });

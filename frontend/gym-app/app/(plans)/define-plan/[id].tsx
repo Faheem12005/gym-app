@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { Text } from '@/components/ui/text';
 import api from '@/utils/api';
 import { useEffect, useState } from 'react';
 import { WorkoutPlanWithRelations } from '@/app/types/generated/zod';
 import { useSession } from '@/auth/authContext';
 import WeeklyScheduleView from '@/components/WeeklyScheduleView';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CreatePlanPage() {
   const { id } = useLocalSearchParams();
@@ -33,57 +34,17 @@ export default function CreatePlanPage() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
         <Text>Loading...</Text>
-      </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>{plan?.name}</Text>
-      <Text style={styles.subheading}>{plan?.id}</Text>
+
+    <SafeAreaView className='p-4 flex-1 gap-2'>
+      <Text className='font-bold text-3xl'>{plan?.name}</Text>
+      <Text className='font-light'>{plan?.id}</Text>
       <WeeklyScheduleView planId={id} workoutDays={plan?.workoutDays ?? []}/>
 
-    </View>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16, // space from the sides
-    paddingTop: 16,
-    backgroundColor: '#fff',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subheading: {
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    backgroundColor: '#eee',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    width: '100%',
-  },
-  exerciseItem: {
-    fontSize: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    width: '100%',
-    borderBottomWidth: 0.5,
-    borderColor: '#ccc',
-  },
-});

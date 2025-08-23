@@ -1,12 +1,7 @@
-import {
-  Text,
-  StyleSheet,
-  View,
-  SectionList,
-  Modal,
-  Pressable,
-} from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { View, SectionList, Modal } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 import { Exercise } from "@/app/types/generated/zod";
 import { useState, useEffect } from "react";
 import { useSession } from "@/auth/authContext";
@@ -14,7 +9,6 @@ import api from "@/utils/api";
 import ExerciseItem from "@/components/ExerciseItem";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ExerciseView from "@/components/ExerciseView";
-import { useRouter } from "expo-router";
 
 interface Section {
   title: string;
@@ -40,7 +34,25 @@ export default function EditDayPage() {
   }>({});
 
   useEffect(() => {
-    const fetchExercises = async () => {
+    const fetchDayExercises = async () => {
+      try {
+        const response = await api.get(`/workout-day/${id}`, {
+          headers: {
+            Authorization: `Bearer ${session?.token}`,
+          },
+        });
+        const orderedExercises: OrderedExercise[] = response.data.exercises.map(
+          (item: any) => ({
+            ...item.exercise,
+            order: item.order, 
+          })
+        );
+        setAddedExercises(orderedExercises);
+      } catch (error) {
+        console.error("Error fetching day exercises", error);
+      }
+    };
+    const fetchAllExercises = async () => {
       try {
         const response = await api.get("/exercises", {
           headers: {
@@ -54,13 +66,12 @@ export default function EditDayPage() {
         setLoading(false);
       }
     };
-
-    fetchExercises();
+    fetchDayExercises();
+    fetchAllExercises();
   }, []);
-
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View>
         <Text>Loading...</Text>
       </View>
     );
@@ -76,9 +87,8 @@ export default function EditDayPage() {
     .filter((section) => section.data.length > 0);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.subheading}>Edit Day page {id}</Text>
-      {/* Exercises that are already added come here in exercise view */}
+    <SafeAreaView className="flex-1 p-4">
+      <Text>Edit Day page {id}</Text>
       {addedExercises.map((exercise) => (
         <ExerciseView
           key={exercise.id}
@@ -101,9 +111,7 @@ export default function EditDayPage() {
           <SectionList
             sections={filteredExercises!}
             keyExtractor={(item) => item.id}
-            renderSectionHeader={({ section }) => (
-              <Text style={styles.sectionHeader}>{section.title}</Text>
-            )}
+            renderSectionHeader={({ section }) => <Text>{section.title}</Text>}
             renderItem={({ item }) => {
               const isSelected = selectedExercises.some(
                 (ex) => ex.id === item.id
@@ -127,9 +135,8 @@ export default function EditDayPage() {
             }}
           />
           {selectedExercises.length > 0 && (
-            <View style={styles.addButtonContainer}>
-              <Pressable
-                style={styles.addButton}
+            <View>
+              <Button
                 onPress={() => {
                   setAddedExercises((prev) => [
                     ...prev,
@@ -143,24 +150,22 @@ export default function EditDayPage() {
                   setModalVisible(false);
                 }}
               >
-                <Text style={styles.addButtonText}>Add Selected Exercises</Text>
-              </Pressable>
+                <Text>Add Selected Exercises</Text>
+              </Button>
             </View>
           )}
         </SafeAreaView>
       </Modal>
-      <Pressable
-        style={styles.addButton}
+      <Button
         onPress={() => {
           setSelectedExercises([]);
           setModalVisible(true);
         }}
       >
         <Text>Add Exercises</Text>
-      </Pressable>
+      </Button>
       {addedExercises.length > 0 && (
-        <Pressable
-          style={styles.addButton}
+        <Button
           onPress={async () => {
             const dataToSave = addedExercises.map((exercise) => {
               const { weight, reps } = exerciseInputs[exercise.id] || {};
@@ -169,7 +174,7 @@ export default function EditDayPage() {
                 order: exercise.order,
                 sets: Number(weight) || 3,
                 reps: Number(reps) || 10,
-                restSeconds: 60, 
+                restSeconds: 60,
               };
             });
             try {
@@ -193,70 +198,8 @@ export default function EditDayPage() {
           }}
         >
           <Text>Save</Text>
-        </Pressable>
+        </Button>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16, // space from the sides
-    paddingTop: 16,
-    backgroundColor: "#fff",
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subheading: {
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    backgroundColor: "#eee",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    width: "100%",
-  },
-  exerciseItem: {
-    fontSize: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    width: "100%",
-    borderBottomWidth: 0.5,
-    borderColor: "#ccc",
-  },
-  addButtonContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderColor: "#ccc",
-  },
-
-  addButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-});

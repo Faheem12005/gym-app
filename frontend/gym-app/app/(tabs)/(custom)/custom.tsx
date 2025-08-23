@@ -10,6 +10,7 @@ import { Colors } from "@/constants/Colors";
 import { WorkoutPlan } from "@/app/types/generated/zod";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Spinner } from "@/components/ui/spinner";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CustomPage() {
   const router = useRouter();
@@ -45,46 +46,54 @@ export default function CustomPage() {
 
   if (loading) {
     return (
-      <Box className="flex-1 justify-center items-center">
-        <Spinner size="large" color={Colors.dark.background} />
-      </Box>
+      <SafeAreaView>
+        <Box className="flex-1 justify-center items-center">
+          <Spinner size="large" color={Colors.dark.background} />
+        </Box>
+      </SafeAreaView>
     );
   }
 
   return (
-    <Box className="flex-1 p-4">
-      {loading ? (
-        <Button
-          className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-4 right-4 z-10"
-          size="lg"
-          action="primary"
-          disabled
-        >
-          <ButtonSpinner className="mr-2" />
-          <ButtonText className="text-app-light-background text-sm">Loading...</ButtonText>
-        </Button>
-      ) : (
-        <Button
-          className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-4 right-4 z-10"
-          onPress={onPress}
-          size="lg"
-          action="primary"
-        >
-          <AntDesign name="plus" color={Colors.light.background} size={18} />
-          <ButtonText className="text-app-light-background text-sm">NEW PLAN</ButtonText>
-        </Button>
-      )}
-      <FlatList
-        ItemSeparatorComponent={() => (
-          <Box className="h-3" />
+    <SafeAreaView className="flex-1">
+      <Box className="flex-1 p-4">
+        {loading ? (
+          <Button
+            className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-4 right-4 z-10"
+            size="lg"
+            action="primary"
+            disabled
+          >
+            <ButtonSpinner className="mr-2" />
+            <ButtonText className="text-app-light-background text-sm">
+              Loading...
+            </ButtonText>
+          </Button>
+        ) : (
+          <Button
+            className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-0 right-4 z-10 active:bg-gray-700"
+            onPress={onPress}
+            size="lg"
+            action="primary"
+          >
+            <AntDesign name="plus" color={Colors.light.background} size={18} />
+            <ButtonText className="text-app-light-background text-sm">
+              NEW PLAN
+            </ButtonText>
+          </Button>
         )}
-        data={workoutPlans}
-        renderItem={({ item }) => (
-          <Box className="bg-black p-5 w-full rounded-lg justify-center items-center">
-            <Text size="md" bold className="text-white tracking-wide">{item.name}</Text>
-          </Box>
-        )}
-      />
-    </Box>
+        <FlatList
+          ItemSeparatorComponent={() => <Box className="h-3" />}
+          data={workoutPlans}
+          renderItem={({ item }) => (
+            <Box className="bg-black p-5 w-full rounded-lg justify-center items-center">
+              <Text size="md" bold className="text-white tracking-wide">
+                {item.name}
+              </Text>
+            </Box>
+          )}
+        />
+      </Box>
+    </SafeAreaView>
   );
 }

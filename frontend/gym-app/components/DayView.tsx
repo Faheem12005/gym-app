@@ -1,5 +1,8 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
 import { WorkoutDayWithRelations } from "@/app/types/generated/zod";
+import { Button } from "./ui/button";
+import { Text } from "./ui/text";
+import { VStack } from "./ui/vstack";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 interface Props {
   isWorkoutDay: boolean;
@@ -26,40 +29,18 @@ export default function DayView({
 }: Props) {
 
   return (
-    <Pressable
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+    <Button
+      className="bg-white h-20 rounded-xl px-10 flex justify-between active:bg-gray-200"
       onPress={onPress}
     >
-      <Text style={styles.dayText}>{dayOfWeekMap[dayOfTheWeek]}</Text>
-      <Text style={styles.infoText}>
-        {isWorkoutDay ? `Workout ID: ${workoutDay?.id}` : "Rest Day"}
-      </Text>
-    </Pressable>
+      <VStack>
+        <Text className="font-semibold text-3xl">{dayOfWeekMap[dayOfTheWeek]}</Text>
+      </VStack>
+      <MaterialCommunityIcons
+        name={isWorkoutDay ? "weight-lifter" : "sleep"}
+        size={24}
+        color="black"
+      />
+    </Button>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 8,
-    marginHorizontal: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  dayText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  infoText: {
-    fontSize: 14,
-    color: "#555",
-  },
-});

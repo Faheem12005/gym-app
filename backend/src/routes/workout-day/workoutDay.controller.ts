@@ -31,7 +31,13 @@ export const getWorkoutDay = async (req: Request, res: Response) => {
     const { id } = req.params;
     const workoutDay = await prisma.workoutDay.findUnique({
       where: { id },
-      include: { exercises: true }
+      include: { 
+        exercises: {
+          include: {
+            exercise: true,
+          }
+        }
+      }
     });
     if (!workoutDay) return res.status(404).json({ error: 'Workout day not found.' });
     res.json(workoutDay);

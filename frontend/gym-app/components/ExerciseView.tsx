@@ -13,7 +13,7 @@ interface Props {
 export default function ExerciseView({ exercise, values, onChange }: Props) {
   return (
     <View style={styles.container}>
-      <Text style={styles.exerciseName}>{exercise.name}</Text>
+      <Text className="text-black" style={styles.exerciseName}>{exercise.name}</Text>
       <View style={styles.inputRow}>
         <TextInput
           keyboardType="number-pad"
