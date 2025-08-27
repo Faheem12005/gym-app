@@ -2,19 +2,19 @@ import { useEffect, useState } from "react";
 import { Modal, View, FlatList } from "react-native";
 import { Text } from "../ui/text";
 import { Button, ButtonText } from "../ui/button";
-import { WorkoutPlan } from "@/app/types/generated/zod";
+import { WorkoutPlanWithRelations } from "@/app/types/generated/zod";
 import { useSession } from "@/auth/authContext";
 import api from "@/utils/api";
 
 interface ShowPlansModalProps {
   isVisible: boolean;
-  onSelect?: (plan: WorkoutPlan) => void;
+  onSelect?: (plan: WorkoutPlanWithRelations) => void;
   onClose?: () => void;
   activePlanId: string | undefined;
 }
 
 export default function ShowPlansModal({ activePlanId, isVisible, onSelect, onClose }: ShowPlansModalProps) {
-  const [plans, setPlans] = useState<WorkoutPlan[]>([]);
+  const [plans, setPlans] = useState<WorkoutPlanWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const { session } = useSession();
   useEffect(() => {

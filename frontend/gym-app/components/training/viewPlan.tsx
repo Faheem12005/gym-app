@@ -7,18 +7,17 @@ import { Box } from "../ui/box";
 import Entypo from "@expo/vector-icons/Entypo";
 import { Button, ButtonIcon, ButtonText } from "../ui/button";
 import ShowPlansModal from "@/components/training/showPlansModal";
-import { WorkoutPlan } from "@/app/types/generated/zod";
+import { WorkoutPlanWithRelations } from "@/app/types/generated/zod";
 import { useSession } from "@/auth/authContext";
 import { useRouter } from "expo-router";
 
 export default function ViewPlan() {
-  const [[loading, storedPlan], setStoredPlan] = useStorageState<WorkoutPlan | undefined>("plan");
+  const [[loading, storedPlan], setStoredPlan] = useStorageState<WorkoutPlanWithRelations | undefined>("plan");
   const [planId, setPlanId] = useState<string | undefined>(storedPlan?.id);
-  const [plan, setPlan] = useState<WorkoutPlan | undefined>(storedPlan ?? undefined);
+  const [plan, setPlan] = useState<WorkoutPlanWithRelations | undefined>(storedPlan ?? undefined);
   const [showModal, setShowModal] = useState(false);
   const { session } = useSession();
   const router = useRouter();
-
   useEffect(() => {
     if (!planId) return;
     const fetchPlan = async () => {

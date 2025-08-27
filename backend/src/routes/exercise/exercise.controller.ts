@@ -30,3 +30,22 @@ export const getAllExercises = async (req: Request, res: Response) => {
         res.status(500).json({ error: errorMessage });
     }
 };
+
+export const getExerciseById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'Exercise id is required.' });
+    }
+    const exercise = await prisma.exercise.findUnique({
+      where: { id },
+    });
+    if (!exercise) {
+      return res.status(404).json({ error: 'Exercise not found.' });
+    }
+    return res.json(exercise);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return res.status(500).json({ error: errorMessage });
+  }
+};

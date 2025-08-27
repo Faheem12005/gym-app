@@ -2,13 +2,15 @@ import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Exercise } from "@/app/types/generated/zod";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Box } from "./ui/box";
-interface Props {
+
+export interface Props {
   exercise: Exercise;
   values: {
     weight: number;
     reps: number;
     sets: number;
   };
+  disabled? : boolean;
   onChange: (values: { sets: number; weight: number; reps: number }) => void;
 }
 
