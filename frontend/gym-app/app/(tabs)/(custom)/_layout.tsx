@@ -12,7 +12,7 @@ export default function RootLayout() {
         }}
       >
         {/* Optionally configure static options outside the route.*/}
-        <Stack.Screen name="custom"  />
+        <Stack.Screen name="custom" />
       </Stack>
   );
 }

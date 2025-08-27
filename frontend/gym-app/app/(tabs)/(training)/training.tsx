@@ -1,17 +1,20 @@
-import { Text, View } from "react-native";
-import { Link } from "expo-router";
+import { VStack } from "@/components/ui/vstack";
+import { Calendar } from "react-native-calendars";
+import { Text } from "@/components/ui/text";
+import ViewPlan from "@/components/training/viewPlan";
 
 export default function TrainingPage() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-      <Link href="/">Go to home screen</Link>
-    </View>
+    <VStack className="p-4 flex-1 gap-4">
+      <Calendar
+        hideArrows
+        hideExtraDays
+        style={{
+          overflow: "hidden",
+          borderRadius: 14, // makes corners rounded
+        }}
+      />
+      <ViewPlan/>
+    </VStack>
   );
 }

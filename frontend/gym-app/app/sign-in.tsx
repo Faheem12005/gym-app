@@ -23,16 +23,13 @@ export default function SignIn() {
   const [passwordError, setPasswordError] = useState("");
   const [globalError, setGlobalError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loadingSession, setLoadingSession] = useState(true);
-  const { signIn, session } = useSession();
+  const { signIn, session, isLoading } = useSession();
   const router = useRouter();
   useEffect(() => {
     if (session === undefined) return;
 
     if (session?.token) {
       router.replace("/training");
-    } else {
-      setLoadingSession(false);
     }
   }, [session]);
 
@@ -67,7 +64,7 @@ export default function SignIn() {
     }
   };
 
-  if (loadingSession) {
+  if (isLoading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center">
         <Spinner color="black" size="large" />
