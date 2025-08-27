@@ -4,17 +4,16 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   WorkoutPlanWithRelations,
   WorkoutDayWithRelations,
+  Exercise,
 } from "@/app/types/generated/zod";
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
-import { Exercise } from "@/app/types/generated/zod";
 import { useSession } from "@/auth/authContext";
 import { VStack } from "@/components/ui/vstack";
 import SessionExerciseView from "@/components/SessionExerciseView";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { useRouter } from "expo-router";
-import { EditIcon } from "@/components/ui/icon";
 
 interface Props {
   exercise: Exercise;
@@ -78,20 +77,58 @@ const onChange = (values: { sets: number; weight: number; reps: number }) => {
 export default function RunSession() {
   const router = useRouter();
   const { session } = useSession();
-  const [[loading, storedPlan], setStoredPlan] = useStorageState<
+  const [[loading, storedPlan]] = useStorageState<
     WorkoutPlanWithRelations | undefined
   >("plan");
   const workoutDay: WorkoutDayWithRelations | null = getCurrentWorkoutDay(
     storedPlan!
   );
   const [fullExercises, setFullExercises] = useState<Props[]>([]);
+
+  const [exerciseState, setExerciseState] = useState<{
+    [exerciseId: string]: {
+      completed: boolean;
+      reps: number;
+      weight: number;
+    }[];
+  }>({});
+
+  const updateSet = (
+    exerciseId: string,
+    setIdx: number,
+    newData: Partial<{ completed: boolean; reps: number; weight: number }>
+  ) => {
+    setExerciseState((prev) => ({
+      ...prev,
+      [exerciseId]: prev[exerciseId].map((set, idx) =>
+        idx === setIdx ? { ...set, ...newData } : set
+      ),
+    }));
+  };
+
   useEffect(() => {
+    if(loading) return;
     if (workoutDay && workoutDay.exercises) {
       getFullExercise(workoutDay.exercises, session?.token!).then(
         setFullExercises
       );
     }
-  }, [workoutDay]);
+  }, [workoutDay, loading]);
+
+  useEffect(() => {
+    if(loading) return;
+    const initialState: any = {};
+    fullExercises.forEach((ex) => {
+      initialState[ex.exercise.id] = Array(ex.values.sets)
+        .fill(null)
+        .map(() => ({
+          completed: false,
+          reps: ex.values.reps,
+          weight: ex.values.weight,
+        }));
+    });
+    setExerciseState(initialState);
+  }, [loading, fullExercises]);
 
   if (loading)
     return (
@@ -114,12 +151,16 @@ export default function RunSession() {
                   key={ex.exercise.id}
                   exercise={ex.exercise}
                   values={ex.values}
+                  exerciseState={exerciseState}
+                  updateSet={updateSet}
                 />
               ))}
           </View>
         </ScrollView>
         <Button className="bg-blue-500 h-16 active:bg-blue-400">
-          <ButtonText className="font-bold text-xl text-white">LOG NEXT SET</ButtonText>
+          <ButtonText className="font-bold text-xl text-white">
+            LOG NEXT SET
+          </ButtonText>
         </Button>
       </VStack>
     </SafeAreaView>

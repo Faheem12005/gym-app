@@ -6,10 +6,22 @@ import { useState } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
 import { VStack } from "./ui/vstack";
 import { TextInput } from "react-native";
-import { Radio, RadioGroup, RadioIcon, RadioIndicator } from "./ui/radio";
-import { CircleIcon, AddIcon } from "@/components/ui/icon";
+import { Checkbox, CheckboxIndicator, CheckboxIcon } from "./ui/checkbox";
+import { CheckIcon, AddIcon } from "@/components/ui/icon";
 
 interface Props {
+  updateSet?: (
+    exerciseId: string,
+    setIdx: number,
+    newData: Partial<{ completed: boolean; reps: number; weight: number }>
+  ) => void;
+  exerciseState?: {
+    [exerciseId: string]: {
+      completed: boolean;
+      reps: number;
+      weight: number;
+    }[];
+  };
   editable?: boolean;
   exercise: Exercise;
   values: {
@@ -20,8 +32,22 @@ interface Props {
   };
 }
 
-const SessionExerciseView = ({ exercise, values, editable }: Props) => {
+const SessionExerciseView = ({
+  exercise,
+  values,
+  editable,
+  updateSet,
+  exerciseState,
+}: Props) => {
   const [details, showDetails] = useState(false);
+  const setsState =
+    exerciseState?.[exercise.id] ??
+    Array(values.sets).fill({
+      completed: false,
+      reps: values.reps,
+      weight: values.weight,
+    });
+
   return (
     <Box className="bg-white rounded-xl p-4">
       <Box className="flex flex-row justify-between">
@@ -51,26 +77,37 @@ const SessionExerciseView = ({ exercise, values, editable }: Props) => {
       <Box>
         {details && (
           <VStack className="gap-2">
-            {[...Array(values.sets)].map((_, i) => (
+            {setsState.map((set, i) => (
               <Box
                 key={exercise.id + i}
                 className="flex flex-row justify-between items-center h-16 p-4 bg-gray-100 rounded-xl"
               >
-                <RadioGroup>
-                  <Radio value={""}>
-                    <RadioIndicator>
-                      <RadioIcon as={CircleIcon} />
-                    </RadioIndicator>
-                  </Radio>
-                </RadioGroup>
+                <Checkbox
+                  isChecked={set.completed}
+                  size="lg"
+                  value={set.completed ? "completed" : "not-completed"}
+                  onPress={() =>
+                    updateSet && 
+                    updateSet(exercise.id, i, { completed: !set.completed })
+                  }
+                  className={`rounded-md border-white text-white focus:ring-2 focus:ring-white ${set.completed ? 'bg-black' : 'bg-white hover:bg-gray-800'}`}
+                >
+                  <CheckboxIndicator>
+                    <CheckboxIcon as={CheckIcon} className="text-white" />
+                  </CheckboxIndicator>
+                </Checkbox>
 
                 <Text className="text-2xl font-bold">{i + 1}</Text>
                 <Box className="flex flex-row items-center justify-center gap-4">
                   <TextInput
                     className="bg-gray-200 h-full rounded-md p-2 text-2xl font-bold w-14"
                     placeholder="Reps"
-                    value={values.reps.toString()}
+                    value={set.reps.toString()}
                     keyboardType="numeric"
+                    onChangeText={(val) =>
+                      updateSet &&
+                      updateSet(exercise.id, i, { reps: Number(val) })
+                    }
                   />
                   <Text className="text-2xl font-bold">Reps</Text>
                 </Box>
@@ -78,8 +115,12 @@ const SessionExerciseView = ({ exercise, values, editable }: Props) => {
                   <TextInput
                     className="bg-gray-200 h-full rounded-md p-2 text-2xl font-bold w-14"
                     placeholder="Weight"
-                    value={values.weight.toString()}
+                    value={set.weight.toString()}
                     keyboardType="numeric"
+                    onChangeText={(val) =>
+                      updateSet &&
+                      updateSet(exercise.id, i, { weight: Number(val) })
+                    }
                   />
                   <Text className="text-2xl font-bold">KG</Text>
                 </Box>
