@@ -9,15 +9,19 @@ type AuthenticatedRequest = Request & {
 
 export const createWorkoutPlan = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { userId, name, muscleGroups } = req.body;
-    if (!userId || !name) {
+    const userId = req.user?.userId;
+    if (!userId) {
       return res.status(400).json({ error: 'Missing required fields.' });
     }
+    const count = await prisma.workoutPlan.count({
+      where: { userId }
+    });
+
     const plan = await prisma.workoutPlan.create({
       data: {
-        userId,
-        name,
-        muscleGroups
+        userId: userId,
+        name: `My Workout Plan ${count + 1}`,
+        muscleGroups: [],
       }
     });
     res.status(201).json(plan);

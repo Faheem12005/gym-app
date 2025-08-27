@@ -5,7 +5,7 @@ import { createWorkoutPlan, getWorkoutPlan, updateWorkoutPlan, deleteWorkoutPlan
 const router = Router();
 
 router.use(requireAuth);
-router.post("/create", createWorkoutPlan);
+router.post("/", createWorkoutPlan);
 router.get("/:id", getWorkoutPlan);
 router.get("/", getAllWorkoutPlansForUser);
 router.put("/:id", updateWorkoutPlan);

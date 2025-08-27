@@ -35,6 +35,7 @@ export const getWorkoutDay = async (req: Request, res: Response) => {
         exercises: {
           include: {
             exercise: true,
+            day: true
           }
         }
       }

@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import userRoutes from './routes/user/user.routes';
-import workoutRoutes from './routes/plans/workoutPlan.routes';
+import workoutPlanRoutes from './routes/plans/workoutPlan.routes';
 import seedRoutes from './seed/seed.routes';
 import workoutLogRoutes from './routes/workout-log/workoutLog.routes';
 import exerciseRoutes from './routes/exercise/exercise.routes'
@@ -14,7 +14,7 @@ app.use(express.json());
 
 
 app.use('/api/user', userRoutes);
-app.use('/api/workout', workoutRoutes);
+app.use('/api/workout-plan', workoutPlanRoutes);
 app.use('/api/workout-log', workoutLogRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/workout-day', workoutDayRoutes);

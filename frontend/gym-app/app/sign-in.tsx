@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box } from "@/components/ui/box";
 import { VStack } from "@/components/ui/vstack";
 import {
@@ -13,6 +13,8 @@ import { Button, ButtonText, ButtonSpinner } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { useSession } from "@/auth/authContext";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -21,8 +23,18 @@ export default function SignIn() {
   const [passwordError, setPasswordError] = useState("");
   const [globalError, setGlobalError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useSession();
+  const [loadingSession, setLoadingSession] = useState(true);
+  const { signIn, session } = useSession();
   const router = useRouter();
+  useEffect(() => {
+    if (session === undefined) return;
+
+    if (session?.token) {
+      router.replace("/training");
+    } else {
+      setLoadingSession(false);
+    }
+  }, [session]);
 
   const handleSignIn = async () => {
     setEmailError("");
@@ -46,6 +58,7 @@ export default function SignIn() {
       await signIn(email, password);
       router.replace("/training");
     } catch (err) {
+      console.log(err);
       setGlobalError("Invalid email or password.");
       setEmail("");
       setPassword("");
@@ -54,6 +67,13 @@ export default function SignIn() {
     }
   };
 
+  if (loadingSession) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center">
+        <Spinner color="black" size="large" />
+      </SafeAreaView>
+    );
+  }
   return (
     <Box className="flex-1 justify-center items-center bg-background-50 px-6">
       <VStack space="lg" className="w-full max-w-md">
@@ -64,24 +84,24 @@ export default function SignIn() {
           <FormControlLabel>
             <FormControlLabelText>Email</FormControlLabelText>
           </FormControlLabel>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter your email"
-              editable={!loading}
-              style={{
-                fontSize: 18,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                borderRadius: 9999,
-                borderWidth: 2,
-                borderColor: emailError ? '#dc2626' : '#d1d5db',
-                backgroundColor: 'white',
-                marginTop: 8,
-              }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Enter your email"
+            editable={!loading}
+            style={{
+              fontSize: 18,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderRadius: 9999,
+              borderWidth: 2,
+              borderColor: emailError ? "#dc2626" : "#d1d5db",
+              backgroundColor: "white",
+              marginTop: 8,
+            }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
           {emailError && (
             <FormControlError>
               <FormControlErrorText>{emailError}</FormControlErrorText>
@@ -92,24 +112,24 @@ export default function SignIn() {
           <FormControlLabel className="mt-4">
             <FormControlLabelText>Password</FormControlLabelText>
           </FormControlLabel>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter your password"
-              editable={!loading}
-              style={{
-                fontSize: 18,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                borderRadius: 9999,
-                borderWidth: 2,
-                borderColor: passwordError ? '#dc2626' : '#d1d5db',
-                backgroundColor: 'white',
-                marginTop: 8,
-              }}
-              secureTextEntry
-              autoCapitalize="none"
-            />
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Enter your password"
+            editable={!loading}
+            style={{
+              fontSize: 18,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderRadius: 9999,
+              borderWidth: 2,
+              borderColor: passwordError ? "#dc2626" : "#d1d5db",
+              backgroundColor: "white",
+              marginTop: 8,
+            }}
+            secureTextEntry
+            autoCapitalize="none"
+          />
           {passwordError && (
             <FormControlError>
               <FormControlErrorText>{passwordError}</FormControlErrorText>

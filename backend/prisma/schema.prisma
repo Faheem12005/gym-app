@@ -1,29 +1,11 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 generator zod {
-  provider       = "zod-prisma-types"
-  createRelationValuesTypes = true
-}
-
-enum MuscleGroup {
-  CHEST
-  BACK
-  LEGS
-  SHOULDERS
-  BICEPS
-  TRICEPS
-  CORE
-  GLUTES
-  FULL_BODY
+  provider                  = "zod-prisma-types"
+  createRelationValuesTypes = "true"
 }
 
 datasource db {
@@ -32,28 +14,24 @@ datasource db {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String          @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  provider      String?
-  providerId    String?         @unique
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-
-  // Auth.js relations
-  accounts      Account[]
-  sessions      Session[]
-  Authenticators Authenticator[]
-
-  // App-specific relations
-  heightLogs    HeightLog[]
-  weightLogs    WeightLog[]
-  workoutPlans  WorkoutPlan[]
-  workoutLogs   WorkoutLog[]
-  createdExercises Exercise[]  @relation("UserCreatedExercises")
+  id               String          @id @default(cuid())
+  email            String          @unique
+  name             String?
+  createdAt        DateTime        @default(now())
+  emailVerified    DateTime?
+  image            String?
+  passwordHash     String?
+  provider         String?
+  providerId       String?         @unique
+  updatedAt        DateTime        @updatedAt
+  accounts         Account[]
+  Authenticators   Authenticator[]
+  createdExercises Exercise[]      @relation("UserCreatedExercises")
+  heightLogs       HeightLog[]
+  sessions         Session[]
+  weightLogs       WeightLog[]
+  workoutLogs      WorkoutLog[]
+  workoutPlans     WorkoutPlan[]
 }
 
 model Account {
@@ -68,11 +46,9 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
 }
@@ -81,11 +57,9 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -105,79 +79,92 @@ model Authenticator {
   credentialDeviceType String
   credentialBackedUp   Boolean
   transports           String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
 }
 
 model HeightLog {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  heightCm  Float
+  id         String   @id @default(cuid())
+  userId     String
+  heightCm   Float
   recordedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model WeightLog {
-  id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  weightKg  Float
+  id         String   @id @default(cuid())
+  userId     String
+  weightKg   Float
   recordedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
 }
 
 model WorkoutPlan {
-  id          String       @id @default(cuid())
-  user        User         @relation(fields: [userId], references: [id])
-  userId      String
-  name        String
-  createdAt   DateTime     @default(now())
-  workoutDays WorkoutDay[]
+  id           String        @id @default(cuid())
+  userId       String
+  name         String
+  createdAt    DateTime      @default(now())
   muscleGroups MuscleGroup[]
+  workoutDays  WorkoutDay[]
+  user         User          @relation(fields: [userId], references: [id])
 }
 
 model WorkoutDay {
-  id        String       @id @default(cuid())
-  plan      WorkoutPlan  @relation(fields: [planId], references: [id])
+  id        String               @id @default(cuid())
   planId    String
-  dayOfWeek Int          // 0 (Sunday) to 6 (Saturday)
+  name      String               @default("Workout day")
+  dayOfWeek Int
+  plan      WorkoutPlan          @relation(fields: [planId], references: [id])
   exercises WorkoutDayExercise[]
 }
 
 model Exercise {
-  id              String                @id @default(cuid())
-  name            String
+  id              String               @id @default(cuid())
+  name            String               
   description     String?
-  userDefined     Boolean               @default(false)
-  createdBy       User?                 @relation("UserCreatedExercises", fields: [createdById], references: [id])
+  userDefined     Boolean              @default(false)
   createdById     String?
+  muscleGroups    MuscleGroup[]
+  createdBy       User?                @relation("UserCreatedExercises", fields: [createdById], references: [id])
   workoutDayLinks WorkoutDayExercise[]
   workoutLogs     WorkoutLog[]
-  muscleGroups    MuscleGroup[]
 }
 
 model WorkoutDayExercise {
-  id          String      @id @default(cuid())
-  day         WorkoutDay  @relation(fields: [dayId], references: [id])
+  id          String     @id @default(cuid())
   dayId       String
-  exercise    Exercise    @relation(fields: [exerciseId], references: [id])
   exerciseId  String
   order       Int
   sets        Int
   reps        Int
+  weights     Float      @default(7.5)
   restSeconds Int
+  day         WorkoutDay @relation(fields: [dayId], references: [id])
+  exercise    Exercise   @relation(fields: [exerciseId], references: [id])
 }
 
 model WorkoutLog {
-  id             String     @id @default(cuid())
-  user           User       @relation(fields: [userId], references: [id])
-  userId         String
-  exercise       Exercise   @relation(fields: [exerciseId], references: [id])
-  exerciseId     String
-  performedAt    DateTime   @default(now())
-  setsCompleted  Int
-  repsPerSet     Int[]
-  weightPerSet   Float[]
-  notes          String?
+  id            String   @id @default(cuid())
+  userId        String
+  exerciseId    String
+  performedAt   DateTime @default(now())
+  setsCompleted Int
+  repsPerSet    Int[]
+  weightPerSet  Float[]
+  notes         String?
+  exercise      Exercise @relation(fields: [exerciseId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+enum MuscleGroup {
+  CHEST
+  BACK
+  LEGS
+  SHOULDERS
+  BICEPS
+  TRICEPS
+  CORE
+  GLUTES
+  FULL_BODY
 }

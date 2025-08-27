@@ -50,7 +50,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
         signIn: async (email: string, password: string) => {
           try {
             const response = await api.post('/user/login', {
-              //TO DO
                 email,
                 password
             });

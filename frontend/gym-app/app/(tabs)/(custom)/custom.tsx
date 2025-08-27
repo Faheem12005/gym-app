@@ -16,12 +16,13 @@ export default function CustomPage() {
   const router = useRouter();
   const { session } = useSession();
   const [loading, setLoading] = useState(true);
+  const [newPlanLoading, setNewPlanLoading] = useState(false);
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[] | []>([]);
 
   useEffect(() => {
     const fetchWorkoutPlans = async () => {
       try {
-        const response = await api.get("/workout", {
+        const response = await api.get("/workout-plan", {
           headers: {
             Authorization: `Bearer ${session?.token}`,
           },
@@ -36,43 +37,61 @@ export default function CustomPage() {
     fetchWorkoutPlans();
   }, [session?.token]);
 
-  const onPress = async () => {
+  const onPress = async (planId: any) => {
     try {
-      router.push("/define-plan/cmdwrr0fj0001imkqzfw51yl3");
+      router.push(`/define-plan/${planId}`);
     } catch (error) {
       console.log("Error creating workout plan:", error);
     }
   };
 
+  const onCreatePlan = async () => {
+    setNewPlanLoading(true);
+    try {
+      const response = await api.post(
+        "/workout-plan",
+        {}, // empty body
+        {
+          headers: {
+            Authorization: `Bearer ${session?.token}`,
+          },
+        }
+      );
+      setWorkoutPlans((prev) => [...prev, response.data]);
+      router.push(`/define-plan/${response.data.id}`);
+    } catch (error) {
+      console.log("Error creating workout plan:", error);
+    } finally {
+      setNewPlanLoading(false);
+    }
+  };
+
   if (loading) {
     return (
-      <SafeAreaView>
         <Box className="flex-1 justify-center items-center">
           <Spinner size="large" color={Colors.dark.background} />
         </Box>
-      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1">
       <Box className="flex-1 p-4">
-        {loading ? (
+        {newPlanLoading ? (
           <Button
             className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-4 right-4 z-10"
             size="lg"
             action="primary"
             disabled
           >
-            <ButtonSpinner className="mr-2" />
+            <ButtonSpinner className="mr-2" color="white" />
             <ButtonText className="text-app-light-background text-sm">
               Loading...
             </ButtonText>
           </Button>
         ) : (
           <Button
-            className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-0 right-4 z-10 active:bg-gray-700"
-            onPress={onPress}
+            className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-4 right-4 z-10 active:bg-gray-700"
+            onPress={onCreatePlan}
             size="lg"
             action="primary"
           >
@@ -86,14 +105,16 @@ export default function CustomPage() {
           ItemSeparatorComponent={() => <Box className="h-3" />}
           data={workoutPlans}
           renderItem={({ item }) => (
-            <Box className="bg-black p-5 w-full rounded-lg justify-center items-center">
+            <Button
+              onPress={() => onPress(item.id)}
+              className="bg-black h-16 w-full rounded-lg justify-center items-center active:bg-gray-800"
+            >
               <Text size="md" bold className="text-white tracking-wide">
                 {item.name}
               </Text>
-            </Box>
+            </Button>
           )}
         />
       </Box>
-    </SafeAreaView>
   );
 }
