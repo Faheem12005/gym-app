@@ -93,6 +93,30 @@ export default function RunSession() {
     }[];
   }>({});
 
+  const removeSet = (exerciseId: string) => {
+    setExerciseState((prev) => {
+      const sets = prev[exerciseId];
+      if (!sets || sets.length === 0) return prev;
+      return {
+        ...prev,
+        [exerciseId]: sets.slice(0, -1),
+      };
+    });
+  };
+
+  const addSet = (exerciseId: string) => {
+    setExerciseState((prev) => ({
+      ...prev,
+      [exerciseId]: [
+        ...prev[exerciseId],
+        {
+          completed: false,
+          reps: prev[exerciseId][0]?.reps ?? 10,
+          weight: prev[exerciseId][0]?.weight ?? 10,
+        },
+      ],
+    }));
+  };
   const updateSet = (
     exerciseId: string,
     setIdx: number,
@@ -147,12 +171,14 @@ export default function RunSession() {
               .sort((a, b) => a.values.order - b.values.order)
               .map((ex) => (
                 <SessionExerciseView
+                  addSet={addSet}
                   editable={true}
                   key={ex.exercise.id}
                   exercise={ex.exercise}
                   values={ex.values}
                   exerciseState={exerciseState}
                   updateSet={updateSet}
+                  removeSet={removeSet}
                 />
               ))}
           </View>

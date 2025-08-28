@@ -8,6 +8,7 @@ import { VStack } from "./ui/vstack";
 import { TextInput } from "react-native";
 import { Checkbox, CheckboxIndicator, CheckboxIcon } from "./ui/checkbox";
 import { CheckIcon, AddIcon } from "@/components/ui/icon";
+import ExercisePopover from "./exercise/exercisePopover";
 
 interface Props {
   updateSet?: (
@@ -15,6 +16,8 @@ interface Props {
     setIdx: number,
     newData: Partial<{ completed: boolean; reps: number; weight: number }>
   ) => void;
+  removeSet?: (exerciseId: string) => void;
+  addSet?: (exerciseId: string) => void;
   exerciseState?: {
     [exerciseId: string]: {
       completed: boolean;
@@ -37,6 +40,8 @@ const SessionExerciseView = ({
   values,
   editable,
   updateSet,
+  addSet,
+  removeSet,
   exerciseState,
 }: Props) => {
   const [details, showDetails] = useState(false);
@@ -68,10 +73,8 @@ const SessionExerciseView = ({
             {values.sets > 1 ? " Sets" : " Set"}
           </Text>
         )}
-        {editable && (
-          <Button>
-            <Entypo name="dots-three-vertical" size={14} color="black" />
-          </Button>
+        {editable && removeSet && (
+          <ExercisePopover exerciseId={exercise.id} removeSet={removeSet} />
         )}
       </Box>
       <Box>
@@ -86,7 +89,7 @@ const SessionExerciseView = ({
                   isChecked={set.completed}
                   size="lg"
                   value={set.completed ? "completed" : "not-completed"}
-                  onPress={() =>
+                  onChange={() =>
                     updateSet && 
                     updateSet(exercise.id, i, { completed: !set.completed })
                   }
@@ -126,7 +129,7 @@ const SessionExerciseView = ({
                 </Box>
               </Box>
             ))}
-            <Button className="bg-gray-100 rounded-xl h-16 active:bg-gray-200">
+            <Button onPress={() => addSet && addSet(exercise.id)} className="bg-gray-100 rounded-xl h-16 active:bg-gray-200">
               <ButtonIcon as={AddIcon} />
               <ButtonText>Add a Set</ButtonText>
             </Button>
