@@ -14,6 +14,7 @@ import SessionExerciseView from "@/components/SessionExerciseView";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { useRouter } from "expo-router";
+import { AxiosError } from "axios";
 
 interface Props {
   exercise: Exercise;
@@ -65,13 +66,13 @@ const getFullExercise = async (
     );
     return results.filter((item): item is Props => item !== null);
   } catch (err) {
-    console.error("Failed to fetch full exercises:", err);
+    if (err instanceof AxiosError) {
+      console.error("Failed to fetch full exercises:", err.message);
+    } else {
+      console.error("Failed to fetch full exercises:", err);
+    }
     return [];
   }
-};
-
-const onChange = (values: { sets: number; weight: number; reps: number }) => {
-  console.log("onChange called with:", values);
 };
 
 export default function RunSession() {
@@ -84,7 +85,8 @@ export default function RunSession() {
     storedPlan!
   );
   const [fullExercises, setFullExercises] = useState<Props[]>([]);
-
+  const [isSaving, setIsSaving] = useState(false);
+  const [exercisesLoading, setExercisesLoading] = useState(false);
   const [exerciseState, setExerciseState] = useState<{
     [exerciseId: string]: {
       completed: boolean;
@@ -117,6 +119,7 @@ export default function RunSession() {
       ],
     }));
   };
+
   const updateSet = (
     exerciseId: string,
     setIdx: number,
@@ -130,36 +133,66 @@ export default function RunSession() {
     }));
   };
 
-  useEffect(() => {
-    if(loading) return;
-    if (workoutDay && workoutDay.exercises) {
-      getFullExercise(workoutDay.exercises, session?.token!).then(
-        setFullExercises
-      );
-    }
-  }, [workoutDay, loading]);
+  const saveSession = async () => {
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+    }, 2000);
+  };
 
   useEffect(() => {
-    if(loading) return;
-    const initialState: any = {};
-    fullExercises.forEach((ex) => {
-      initialState[ex.exercise.id] = Array(ex.values.sets)
-        .fill(null)
-        .map(() => ({
-          completed: false,
-          reps: ex.values.reps,
-          weight: ex.values.weight,
-        }));
-    });
-    setExerciseState(initialState);
-  }, [loading, fullExercises]);
+    if (loading || !storedPlan || !session?.token) return;
 
-  if (loading)
+    const workoutDay = getCurrentWorkoutDay(storedPlan);
+    if (!workoutDay || !workoutDay.exercises) return;
+
+    const fetchAndInitialize = async () => {
+      try {
+        setExercisesLoading(true);
+        const exercises = await getFullExercise(
+          workoutDay.exercises,
+          session.token
+        );
+        setFullExercises(exercises);
+
+        // Initialize exerciseState
+        const initialState: Record<
+          string,
+          { completed: boolean; reps: number; weight: number }[]
+        > = {};
+        exercises.forEach((ex) => {
+          initialState[ex.exercise.id] = Array(ex.values.sets)
+            .fill(null)
+            .map(() => ({
+              completed: false,
+              reps: ex.values.reps,
+              weight: ex.values.weight,
+            }));
+        });
+        setExerciseState(initialState);
+      } catch (err) {
+        console.error("Failed to fetch and initialize exercises:", err);
+      } finally {
+        setExercisesLoading(false);
+      }
+    };
+
+    fetchAndInitialize();
+  }, [loading, storedPlan, session?.token]);
+
+  if (loading || isSaving || exercisesLoading)
     return (
       <View className="flex-1 justify-center items-center">
         <Spinner color="black" size="large" />
       </View>
     );
+
+  const allCompleted =
+    fullExercises.length > 0 &&
+    fullExercises.every((ex) => {
+      const sets = exerciseState[ex.exercise.id];
+      return sets && sets.length > 0 && sets.every((set) => set.completed);
+    });
 
   return (
     <SafeAreaView className="flex-1">
@@ -183,11 +216,22 @@ export default function RunSession() {
               ))}
           </View>
         </ScrollView>
-        <Button className="bg-blue-500 h-16 active:bg-blue-400">
-          <ButtonText className="font-bold text-xl text-white">
-            LOG NEXT SET
-          </ButtonText>
-        </Button>
+        {!allCompleted ? (
+          <Button className="bg-blue-500 h-16 active:bg-blue-400">
+            <ButtonText className="font-bold text-xl text-white">
+              LOG NEXT SET
+            </ButtonText>
+          </Button>
+        ) : (
+          <Button
+            className="bg-blue-500 h-16 active:bg-blue-400"
+            onPress={saveSession}
+          >
+            <ButtonText className="font-bold text-xl text-white">
+              FINISH
+            </ButtonText>
+          </Button>
+        )}
       </VStack>
     </SafeAreaView>
   );

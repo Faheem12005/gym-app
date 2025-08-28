@@ -78,6 +78,7 @@ const onChange = (values: { sets: number; weight: number; reps: number }) => {
 export default function ActiveSession() {
   const router = useRouter();
   const { session } = useSession();
+  const [loadingExercises, setLoadingExercises] = useState(false);
   const [[loading, storedPlan], setStoredPlan] = useStorageState<
     WorkoutPlanWithRelations | undefined
   >("plan");
@@ -87,13 +88,17 @@ export default function ActiveSession() {
   const [fullExercises, setFullExercises] = useState<Props[]>([]);
   useEffect(() => {
     if (workoutDay && workoutDay.exercises) {
+      setLoadingExercises(true);
       getFullExercise(workoutDay.exercises, session?.token!).then(
-        setFullExercises
+        (exercises) => {
+          setFullExercises(exercises);
+          setLoadingExercises(false);
+        }
       );
     }
-  }, [workoutDay]);
+  }, [session?.token, workoutDay]);
 
-  if (loading)
+  if (loading || loadingExercises)
     return (
       <View className="flex-1 justify-center items-center">
         <Spinner color="black" size="large" />
