@@ -83,7 +83,7 @@ const SessionExerciseView = ({
             {setsState.map((set, i) => (
               <Box
                 key={exercise.id + i}
-                className="flex flex-row justify-between items-center h-16 p-4 bg-gray-100 rounded-xl"
+                className={`flex flex-row justify-between items-center h-16 p-4 rounded-xl ${set.completed ? 'bg-gray-300' : 'bg-gray-100 hover:bg-gray-200'}`}
               >
                 <Checkbox
                   isChecked={set.completed}

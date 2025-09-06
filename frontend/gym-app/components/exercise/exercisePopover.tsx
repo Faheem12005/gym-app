@@ -53,6 +53,12 @@ const ExercisePopover = ({ exerciseId, removeSet }: Props) => {
                 <Button className="active:bg-slate-600">
                     <ButtonText className="text-white font-normal text-sm">Rest Timer</ButtonText>
                 </Button>
+                <Button className="active:bg-slate-600">
+                  <ButtonText className="text-white font-normal text-sm">Suggest Weights</ButtonText>
+                </Button>
+                <Button className="active:bg-slate-600">
+                  <ButtonText className="text-white font-normal text-sm">Suggest Sets</ButtonText>
+                </Button>
             </PopoverBody>
         </PopoverContent>
     </Popover>

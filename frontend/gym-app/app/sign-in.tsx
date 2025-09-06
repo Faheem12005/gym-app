@@ -74,9 +74,10 @@ export default function SignIn() {
   return (
     <Box className="flex-1 justify-center items-center bg-background-50 px-6">
       <VStack space="lg" className="w-full max-w-md">
-        <Text size="2xl" bold className="text-center font-light">
+        <Text size="4xl" bold className="text-center font-light">
           GymIt
         </Text>
+        <Text size="2xl" bold className="text-center font-light">AI Powered Workouts.</Text>
         <FormControl isInvalid={!!emailError}>
           <FormControlLabel>
             <FormControlLabelText>Email</FormControlLabelText>

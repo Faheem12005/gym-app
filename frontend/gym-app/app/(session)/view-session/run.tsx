@@ -135,9 +135,26 @@ export default function RunSession() {
 
   const saveSession = async () => {
     setIsSaving(true);
-    setTimeout(() => {
+    const reqBody = Object.entries(exerciseState).map(([exerciseId, sets]) => ({
+      exerciseId,
+      repsPerSet: sets.map((set) => set.reps),
+      weightPerSet: sets.map((set) => set.weight),
+      noSets: sets.length,
+    }));
+    try {
+      await api.post(
+        `/workout-log/create`,
+        reqBody,
+        {
+          headers: { Authorization: `Bearer ${session?.token}` },
+        }
+      );
+      router.replace("/(session)/view-session/post");
+    } catch (error) {
+      console.error("Failed to save workout log:", error);
+    } finally {
       setIsSaving(false);
-    }, 2000);
+    }
   };
 
   useEffect(() => {

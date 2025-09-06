@@ -1,17 +1,36 @@
 import { Request, Response } from 'express';
 import prisma from '../../../libs/prisma';
-import { Prisma } from '../../../generated/prisma';
+import { z } from 'zod';
+
+const WorkoutLogSchema = z.object({
+  exerciseId: z.string(),
+  repsPerSet: z.array(z.number().min(1)),
+  weightPerSet: z.array(z.number().min(0)),
+  noSets: z.number().min(1),
+})
+
+const WorkoutLogSchemaArray = z.array(WorkoutLogSchema);
 
 export const createWorkoutLog = async (
-  req: Request<{}, {}, Prisma.WorkoutLogCreateInput>,
-  res: Response
+  req: any,
+  res: any
 ) => {
   try {
-    const log = await prisma.workoutLog.create({
-      data: req.body
+    const validated = WorkoutLogSchemaArray.parse(req.body);
+    const log = await prisma.workoutLog.createMany({
+      data: validated.map(entry => ({
+        userId: req.user.userId,
+        exerciseId: entry.exerciseId,
+        repsPerSet: entry.repsPerSet,
+        weightPerSet: entry.weightPerSet,
+        setsCompleted: entry.noSets,
+      })),
     });
     res.status(201).json(log);
   } catch (error) {
+    if(error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.issues });
+    }
     res.status(500).json({ error: (error as Error).message });
   }
 };

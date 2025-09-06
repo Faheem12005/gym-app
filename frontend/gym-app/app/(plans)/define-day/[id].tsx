@@ -77,7 +77,7 @@ export default function EditDayPage() {
           <SectionList
             sections={exercises!}
             keyExtractor={(item) => item.id}
-            renderSectionHeader={({ section }) => <Text>{section.title}</Text>}
+            renderSectionHeader={({ section }) => <Text className="px-3 text-2xl bg-gray-200 border border-gray-400">{section.title}</Text>}
             renderItem={({ item }) => {
               const isSelected = selectedExercises.some(
                 (ex) => ex.id === item.id
