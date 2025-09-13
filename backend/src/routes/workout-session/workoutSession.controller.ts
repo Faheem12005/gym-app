@@ -66,3 +66,29 @@ export const checkIfWorkoutSessionExists = async (req: Request, res: Response) =
     res.status(500).json({ error: (error as Error).message });
   }
 };
+
+export const getWorkoutSessionById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'Workout session id is required.' });
+    }
+    const session = await prisma.workoutSession.findUnique({
+      where: { id },
+      include: {
+        logs: {
+          include: {
+            exercise: true,
+          }
+        }
+        
+      }
+    });
+    if (!session) {
+      return res.status(404).json({ error: 'Workout session not found.' });
+    }
+    res.status(200).json(session);
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+}

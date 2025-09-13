@@ -1,12 +1,12 @@
 import { WorkoutSession } from "@/app/types/generated/zod";
 import api from "@/utils/api";
-import { AxiosError } from "axios";
+import { Axios, AxiosError } from "axios";
 
 
 
 export const createWorkoutSession = async (data: {
-    userId: string;
-    workoutDayId: string;
+  userId: string;
+  workoutDayId: string;
 }) => {
   try {
     const response = await api.post("/workout-sessions/create", data);
@@ -51,7 +51,19 @@ export const checkIfWorkoutSessionExists = async (
     if (error instanceof AxiosError && error.response?.status === 404) {
       return false;
     }
-    console.error("Error checking workout session existence:", error);
-    throw error;
+    else {
+      console.error("Error checking workout session existence:", error);
+      throw error;
+    }
   }
 };
+
+export const getWorkoutSession = async (id: string) => {
+  try {
+    const response = await api.get(`/workout-sessions/${id}`);
+    return response.data;
+  } catch (error: AxiosError | any) {
+    console.error("Error fetching workout session:", error.message);
+    throw error;
+  }
+}

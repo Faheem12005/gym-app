@@ -9,7 +9,6 @@ import ExerciseItem from "@/components/ExerciseItem";
 import { useEditDay } from "@/hooks/useEditDay";
 import EditExerciseView from "@/components/EditExerciseView";
 import { useState } from "react";
-
 export default function EditDayPage() {
   const { id } = useLocalSearchParams();
   const { session } = useSession();
@@ -127,6 +126,7 @@ export default function EditDayPage() {
           disabled={saveLoading}
           className="bg-cyan-500 h-16 active:bg-cyan-300"
           onPress={async () => {
+            
             await saveExercises();
             router.replace("/custom");
           }}

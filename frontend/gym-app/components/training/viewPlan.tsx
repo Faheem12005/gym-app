@@ -1,4 +1,3 @@
-
 import { useAsyncStorage } from "@/hooks/useAsyncStorage";
 import { Text } from "../ui/text";
 import { useEffect, useState } from "react";
@@ -13,7 +12,9 @@ import { getCurrentWorkoutDay } from "@/utils/getCurrentWorkoutDay";
 import { useSession } from "@/auth/authContext";
 
 export default function ViewPlan() {
-  const [storedPlan, setStoredPlan, loading] = useAsyncStorage<WorkoutPlanWithRelations | undefined>("plan");
+  const [storedPlan, setStoredPlan, loading] = useAsyncStorage<
+    WorkoutPlanWithRelations | undefined
+  >("plan");
   const [showModal, setShowModal] = useState(false);
   const router = useRouter();
   const day = getCurrentWorkoutDay(storedPlan!);
@@ -22,8 +23,13 @@ export default function ViewPlan() {
   useEffect(() => {
     const checkSession = async () => {
       if (day) {
-        const exists = await checkIfWorkoutSessionExists(session?.user.id!, day.id);
+        const exists = await checkIfWorkoutSessionExists(
+          session?.user.id!,
+          day.id
+        );
         setCompletedToday(exists);
+      } else {
+        setCompletedToday(false);
       }
     };
     checkSession();
@@ -44,34 +50,52 @@ export default function ViewPlan() {
           setShowModal(false);
         }}
       />
-      <Box className={`p-4 h-40 ${completedToday ? 'bg-emerald-400' : 'bg-gray-800'} rounded-xl flex-row items-center justify-between`}>
+      <Box
+        className={`p-4 h-40 ${
+          completedToday ? "bg-emerald-400" : "bg-gray-800"
+        } rounded-xl flex-row items-center justify-between`}
+      >
         {storedPlan?.id ? (
           <>
-          <Box>
-            <Text className="text-white font-medium text-3xl">{storedPlan.name}</Text>
-            {completedToday && <Text className="text-white">Completed Todays Workout!</Text>}
-          </Box>
+            <Box>
+              <Text className="text-white font-medium text-3xl">
+                {storedPlan.name}
+              </Text>
+              {!day && <Text className="text-white">No Workout Scheduled</Text>}
+              {completedToday && (
+                <Text className="text-white">Completed Todays Workout!</Text>
+              )}
+            </Box>
 
-            {
-              completedToday ? 
-              <Button onPress={() => router.push('/(session)/view-session/post')} className="h-20">
-                <Entypo
-                  name="check"
-                  size={50}
-                  color="white"
-                />
+            {/* Button logic */}
+            {day ? (
+              completedToday ? (
+                <Button
+                  onPress={() => router.push('/metrics')}
+                  className="h-20"
+                >
+                  <Entypo name="check" size={50} color="white" />
+                </Button>
+              ) : (
+                <Button
+                  onPress={() => router.push("/(session)/view-session/active")}
+                  className="h-20"
+                >
+                  <Entypo
+                    name="chevron-with-circle-right"
+                    size={50}
+                    color="white"
+                  />
+                </Button>
+              )
+            ) : (
+              <Button
+                onPress={() => router.push(`/define-plan/${storedPlan?.id}`)}
+                className="h-20"
+              >
+                <Entypo name="plus" size={50} color="white" />
               </Button>
-              :             
-              <Button onPress={() => router.push('/(session)/view-session/active')} className="h-20">
-              <Entypo
-                name="chevron-with-circle-right"
-                size={50}
-                color="white"
-              />
-            </Button>
-
-            }
-
+            )}
           </>
         ) : (
           <>
@@ -88,7 +112,10 @@ export default function ViewPlan() {
           </>
         )}
       </Box>
-      <Button onPress={() => setShowModal(true)} className="bg-gray-800 rounded-xl">
+      <Button
+        onPress={() => setShowModal(true)}
+        className="bg-gray-800 rounded-xl"
+      >
         <ButtonText className="text-white">Change your plan</ButtonText>
       </Button>
     </>

@@ -141,7 +141,10 @@ export default function RunSession() {
     }));
     try {
       await api.post(`/workout-logs/create`, reqBody);
-      router.replace("/(session)/view-session/post");
+      router.replace({
+        pathname: "/(session)/view-session/post/[id]",
+        params: { id: workoutSession?.id! }
+      });
     } catch (error) {
       console.error("Failed to save workout log:", error);
     } finally {
@@ -222,7 +225,7 @@ export default function RunSession() {
         <Spinner color="black" size="large" />
       </View>
     );
-
+    console.log("workoutSession:", workoutSession); 
   const allCompleted =
     fullExercises.length > 0 &&
     fullExercises.every((ex) => {
