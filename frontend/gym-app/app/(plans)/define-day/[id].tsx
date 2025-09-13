@@ -6,8 +6,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { Button, ButtonText, ButtonSpinner } from "@/components/ui/button";
 import ExerciseItem from "@/components/ExerciseItem";
-import ExerciseView from "@/components/ExerciseView";
 import { useEditDay } from "@/hooks/useEditDay";
+import ExerciseView from "@/components/ExerciseView";
 import { useState } from "react";
 
 export default function EditDayPage() {

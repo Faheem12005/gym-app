@@ -32,7 +32,7 @@ export function useEditDay(dayId: string | string[] | undefined, token?: string)
   useEffect(() => {
     const fetchDayExercises = async () => {
       try {
-        const response = await api.get(`/workout-day/${dayId}`, {
+        const response = await api.get(`/workout-days/${dayId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const orderedExercises: OrderedExercise[] = response.data.exercises.map(
@@ -103,7 +103,7 @@ export function useEditDay(dayId: string | string[] | undefined, token?: string)
     try {
       if (newExercises.length > 0) {
         await api.post(
-          "/workout-exercise",
+          "/workout-exercises",
           { exercises: newExercises, workoutDayId: dayId },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -111,7 +111,7 @@ export function useEditDay(dayId: string | string[] | undefined, token?: string)
 
       if (existingExercises.length > 0) {
         await api.put(
-          "/workout-exercise",
+          "/workout-exercises",
           { exercises: existingExercises },
           { headers: { Authorization: `Bearer ${token}` } }
         );

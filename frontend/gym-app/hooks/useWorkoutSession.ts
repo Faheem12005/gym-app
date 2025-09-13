@@ -1,4 +1,4 @@
-import { useStorageState } from "@/utils/useStorageState";
+import { useStorageState } from "@/hooks/useStorageState";
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
 import { WorkoutPlanWithRelations, WorkoutDayWithRelations, Exercise } from "@/app/types/generated/zod";

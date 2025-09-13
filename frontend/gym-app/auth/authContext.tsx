@@ -1,5 +1,5 @@
 import { use, createContext, type PropsWithChildren } from 'react';
-import { useStorageState } from '@/utils/useStorageState';
+import { useStorageState } from '@/hooks/useStorageState';
 import api from '@/utils/api';
 
 export type AuthResponse = {
@@ -49,7 +49,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       value={{
         signIn: async (email: string, password: string) => {
           try {
-            const response = await api.post('/user/login', {
+            const response = await api.post('/users/login', {
                 email,
                 password
             });

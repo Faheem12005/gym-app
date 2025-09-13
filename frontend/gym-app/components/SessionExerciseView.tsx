@@ -13,8 +13,8 @@ import ExercisePopover from "./exercise/exercisePopover";
 interface Props {
   updateSet?: (
     exerciseId: string,
-    setIdx: number,
-    newData: Partial<{ completed: boolean; reps: number; weight: number }>
+    newData: Partial<{ completed: boolean; reps: number; weight: number }>,
+    setIdx?: number,
   ) => void;
   removeSet?: (exerciseId: string) => void;
   addSet?: (exerciseId: string) => void;
@@ -91,7 +91,7 @@ const SessionExerciseView = ({
                   value={set.completed ? "completed" : "not-completed"}
                   onChange={() =>
                     updateSet && 
-                    updateSet(exercise.id, i, { completed: !set.completed })
+                    updateSet(exercise.id, { completed: !set.completed }, i)
                   }
                   className={`rounded-md border-white text-white focus:ring-2 focus:ring-white ${set.completed ? 'bg-black' : 'bg-white hover:bg-gray-800'}`}
                 >
@@ -109,7 +109,7 @@ const SessionExerciseView = ({
                     keyboardType="numeric"
                     onChangeText={(val) =>
                       updateSet &&
-                      updateSet(exercise.id, i, { reps: Number(val) })
+                      updateSet(exercise.id, { reps: Number(val) }, i)
                     }
                   />
                   <Text className="text-2xl font-bold">Reps</Text>
@@ -122,7 +122,7 @@ const SessionExerciseView = ({
                     keyboardType="numeric"
                     onChangeText={(val) =>
                       updateSet &&
-                      updateSet(exercise.id, i, { weight: Number(val) })
+                      updateSet(exercise.id, { weight: Number(val) }, i)
                     }
                   />
                   <Text className="text-2xl font-bold">KG</Text>

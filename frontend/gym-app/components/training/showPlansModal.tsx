@@ -20,7 +20,7 @@ export default function ShowPlansModal({ activePlanId, isVisible, onSelect, onCl
   useEffect(() => {
     const fetchWorkoutPlans = async () => {
       try {
-        const response = await api.get("/workout-plan", {
+        const response = await api.get("/workout-plans", {
           headers: {
             Authorization: `Bearer ${session?.token}`,
           },

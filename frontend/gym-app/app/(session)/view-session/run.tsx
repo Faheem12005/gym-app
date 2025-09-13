@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from "react-native";
-import { useStorageState } from "@/utils/useStorageState";
+import { useAsyncStorage } from "@/hooks/useAsyncStorage";
 import { Spinner } from "@/components/ui/spinner";
 import {
   WorkoutPlanWithRelations,
@@ -78,7 +78,7 @@ const getFullExercise = async (
 export default function RunSession() {
   const router = useRouter();
   const { session } = useSession();
-  const [[loading, storedPlan]] = useStorageState<
+  const [storedPlan, setStoredPlan, loading, remove] = useAsyncStorage<
     WorkoutPlanWithRelations | undefined
   >("plan");
   const workoutDay: WorkoutDayWithRelations | null = getCurrentWorkoutDay(
@@ -122,9 +122,10 @@ export default function RunSession() {
 
   const updateSet = (
     exerciseId: string,
-    setIdx: number,
-    newData: Partial<{ completed: boolean; reps: number; weight: number }>
+    newData: Partial<{ completed: boolean; reps: number; weight: number }>,
+    setIdx?: number
   ) => {
+    if (typeof setIdx !== "number") return;
     setExerciseState((prev) => ({
       ...prev,
       [exerciseId]: prev[exerciseId].map((set, idx) =>
@@ -142,13 +143,9 @@ export default function RunSession() {
       noSets: sets.length,
     }));
     try {
-      await api.post(
-        `/workout-log/create`,
-        reqBody,
-        {
-          headers: { Authorization: `Bearer ${session?.token}` },
-        }
-      );
+      await api.post(`/workout-logs/create`, reqBody, {
+        headers: { Authorization: `Bearer ${session?.token}` },
+      });
       router.replace("/(session)/view-session/post");
     } catch (error) {
       console.error("Failed to save workout log:", error);

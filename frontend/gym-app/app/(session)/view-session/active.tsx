@@ -1,13 +1,13 @@
 import { View, Text, ScrollView } from "react-native";
-import { useStorageState } from "@/utils/useStorageState";
+import { useAsyncStorage } from "@/hooks/useAsyncStorage";
 import { Spinner } from "@/components/ui/spinner";
 import {
   WorkoutPlanWithRelations,
   WorkoutDayWithRelations,
+  Exercise,
 } from "@/app/types/generated/zod";
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
-import { Exercise } from "@/app/types/generated/zod";
 import { useSession } from "@/auth/authContext";
 import { VStack } from "@/components/ui/vstack";
 import SessionExerciseView from "@/components/SessionExerciseView";
@@ -71,20 +71,17 @@ const getFullExercise = async (
   }
 };
 
-const onChange = (values: { sets: number; weight: number; reps: number }) => {
-  console.log("onChange called with:", values);
-};
 
 export default function ActiveSession() {
   const router = useRouter();
   const { session } = useSession();
   const [loadingExercises, setLoadingExercises] = useState(false);
-  const [[loading, storedPlan], setStoredPlan] = useStorageState<
+  const [storedPlan, setStoredPlan, loading, remove] = useAsyncStorage<
     WorkoutPlanWithRelations | undefined
   >("plan");
-  const workoutDay: WorkoutDayWithRelations | null = getCurrentWorkoutDay(
-    storedPlan!
-  );
+
+  const workoutDay: WorkoutDayWithRelations | null =
+    getCurrentWorkoutDay(storedPlan!);
   const [fullExercises, setFullExercises] = useState<Props[]>([]);
   useEffect(() => {
     if (workoutDay && workoutDay.exercises) {
@@ -123,10 +120,18 @@ export default function ActiveSession() {
               ))}
           </View>
         </ScrollView>
-        <Button className="bg-blue-500 h-16" onPress={() => router.push('/(session)/view-session/run')}>
-          <ButtonText className="font-bold text-xl text-white">START</ButtonText>
+        <Button
+          className="bg-blue-500 h-16"
+          onPress={() => router.push("/(session)/view-session/run")}
+        >
+          <ButtonText className="font-bold text-xl text-white">
+            START
+          </ButtonText>
         </Button>
-        <Button className="bg-white h-16" onPress={() => router.push(`/(plans)/define-day/${workoutDay?.id}`)}>
+        <Button
+          className="bg-white h-16"
+          onPress={() => router.push(`/(plans)/define-day/${workoutDay?.id}`)}
+        >
           <ButtonText className="font-bold text-black text-xl">EDIT</ButtonText>
           <ButtonIcon as={EditIcon} />
         </Button>

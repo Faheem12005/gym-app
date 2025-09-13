@@ -1,4 +1,3 @@
-import { ScrollView } from "react-native";
 import { WorkoutDayWithRelations } from "@/app/types/generated/zod";
 import DayView from "./DayView";
 import { useRouter } from "expo-router";
@@ -27,7 +26,7 @@ export default function WeeklyScheduleView({ workoutDays, planId }: Props) {
       if (isWorkoutDay && existingId) {
         router.push(`/(plans)/define-day/${existingId}`);
       } else {
-        const response = await api.post("/workout-day/create", {
+        const response = await api.post("/workout-days/create", {
           planId,
           dayOfWeek,
           exercises: [], // initially empty

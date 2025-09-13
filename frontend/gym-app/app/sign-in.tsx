@@ -31,7 +31,7 @@ export default function SignIn() {
     if (session?.token) {
       router.replace("/training");
     }
-  }, [session]);
+  }, [router, session]);
 
   const handleSignIn = async () => {
     setEmailError("");

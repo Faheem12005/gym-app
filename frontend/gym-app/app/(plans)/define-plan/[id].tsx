@@ -18,7 +18,7 @@ export default function CreatePlanPage() {
   useEffect(() => {
     const fetchPlan = async () => {
       try {
-        const response = await api.get(`/workout-plan/${id}`, {
+        const response = await api.get(`/workout-plans/${id}`, {
           headers: {
             Authorization: `Bearer ${session?.token}`,
           },

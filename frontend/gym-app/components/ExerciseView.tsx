@@ -1,7 +1,8 @@
-import { View, Text, TextInput, StyleSheet } from "react-native";
 import { Exercise } from "@/app/types/generated/zod";
-import { Button, ButtonText } from "@/components/ui/button";
 import { Box } from "./ui/box";
+import { Button, ButtonText } from "@/components/ui/button";
+import { VStack } from "./ui/vstack";
+import { TextInput, Text } from "react-native";
 
 export interface Props {
   exercise: Exercise;
@@ -10,74 +11,77 @@ export interface Props {
     reps: number;
     sets: number;
   };
-  disabled? : boolean;
+  disabled?: boolean;
   onChange: (values: { sets: number; weight: number; reps: number }) => void;
 }
 
-export default function ExerciseView({ exercise, values, onChange }: Props) {
-  const addSet = () => {
-    onChange({ ...values, sets: values.sets + 1 });
-  }
-  const removeSet = () => {
-    onChange({ ...values, sets: values.sets - 1 });
-  };
+export default function ExerciseView({
+  exercise,
+  values,
+  onChange,
+  disabled,
+}: Props) {
+
   return (
-    <Box className="bg-white p-4 h-44 rounded-md">
-      <Text className="text-black" style={styles.exerciseName}>
-        {exercise.name}
-      </Text>
-      <View style={styles.inputRow}>
-        <TextInput
-          keyboardType="number-pad"
-          placeholder="Weight"
-          style={styles.input}
-          value={values.weight === 0 ? "" : values.weight.toString()}
-          onChangeText={(text) => onChange({ ...values, weight: text ? parseFloat(text) : 0 })}
-        />
-        <TextInput
-          keyboardType="number-pad"
-          placeholder="Reps"
-          style={styles.input}
-          value={values.reps === 0 ? "" : values.reps.toString()}
-          onChangeText={(text) => onChange({ ...values, reps: text ? parseInt(text) : 0 })}
-        />
-      </View>
-      <Box className="flex flex-row flex-1 items-center justify-between">
-        <Button 
-          className="bg-black" 
-          isDisabled={values.sets === 1}
-          onPress={removeSet}
+    <Box className="bg-white rounded-xl p-4">
+      <Box className="flex flex-row justify-between items-center">
+        <Text className="font-semibold text-2xl">{exercise.name}</Text>
+        <Text>
+          {values.sets}
+          {values.sets > 1 ? " Sets" : " Set"}
+        </Text>
+      </Box>
+      <Box>
+        <VStack className="gap-2">
+          <Box
+            key={exercise.id}
+            className="flex flex-row justify-between items-center h-16 p-4 rounded-xl bg-gray-100"
           >
-          <ButtonText className="text-white">Minus</ButtonText>
-        </Button>
-        <Text className="bg-black text-white p-2 rounded-md font-bold">SETS: {values.sets.toString()}</Text>
-        <Button
-          onPress={addSet}
-          className="bg-black">
-          <ButtonText className="text-white">Add</ButtonText>
-        </Button>
+            <Box className="flex flex-row items-center justify-center gap-4">
+              <TextInput
+                className="bg-gray-200 h-full rounded-md p-2 text-2xl font-bold w-14"
+                placeholder="Reps"
+                value={values.reps.toString()}
+                keyboardType="numeric"
+                onChangeText={(val) =>
+                  onChange({ ...values, reps: Number(val) })
+                }
+              />
+              <Text className="text-2xl font-bold">Reps</Text>
+            </Box>
+            <Box className="flex flex-row items-center justify-center gap-4">
+              <TextInput
+                className="bg-gray-200 h-full rounded-md p-2 text-2xl font-bold w-14"
+                placeholder="Weight"
+                value={values.weight.toString()}
+                keyboardType="numeric"
+                onChangeText={(val) =>
+                  onChange({ ...values, weight: Number(val) })
+                }
+              />
+              <Text className="text-2xl font-bold">KG</Text>
+            </Box>
+          </Box>
+          <Box className="flex flex-row items-center justify-between gap-2 mt-2">
+            <Button
+              onPress={() =>
+                onChange({ ...values, sets: Math.max(1, values.sets - 1) })
+              }
+              isDisabled={values.sets === 1 || disabled}
+              className="bg-gray-200"
+            >
+              <ButtonText>- Remove Set</ButtonText>
+            </Button>
+            <Button
+              onPress={() => onChange({ ...values, sets: values.sets + 1 })}
+              isDisabled={disabled}
+              className="bg-gray-200"
+            >
+              <ButtonText>+ Add Set</ButtonText>
+            </Button>
+          </Box>
+        </VStack>
       </Box>
     </Box>
   );
 }
-
-const styles = StyleSheet.create({
-  exerciseName: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  inputRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  input: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    backgroundColor: "#fff",
-  },
-});

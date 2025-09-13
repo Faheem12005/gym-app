@@ -10,7 +10,6 @@ import { Colors } from "@/constants/Colors";
 import { WorkoutPlan } from "@/app/types/generated/zod";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Spinner } from "@/components/ui/spinner";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CustomPage() {
   const router = useRouter();
@@ -22,7 +21,7 @@ export default function CustomPage() {
   useEffect(() => {
     const fetchWorkoutPlans = async () => {
       try {
-        const response = await api.get("/workout-plan", {
+        const response = await api.get("/workout-plans", {
           headers: {
             Authorization: `Bearer ${session?.token}`,
           },
@@ -49,7 +48,7 @@ export default function CustomPage() {
     setNewPlanLoading(true);
     try {
       const response = await api.post(
-        "/workout-plan",
+        "/workout-plans",
         {}, // empty body
         {
           headers: {
