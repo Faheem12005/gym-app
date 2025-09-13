@@ -20,11 +20,7 @@ export default function ShowPlansModal({ activePlanId, isVisible, onSelect, onCl
   useEffect(() => {
     const fetchWorkoutPlans = async () => {
       try {
-        const response = await api.get("/workout-plans", {
-          headers: {
-            Authorization: `Bearer ${session?.token}`,
-          },
-        });
+        const response = await api.get("/workout-plans");
         setPlans(response.data);
       } catch (error) {
         console.error("Error fetching workout plans:", error);

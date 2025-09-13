@@ -32,6 +32,7 @@ model User {
   weightLogs       WeightLog[]
   workoutLogs      WorkoutLog[]
   workoutPlans     WorkoutPlan[]
+  workoutSessions  WorkoutSession[]
 }
 
 model Account {
@@ -117,6 +118,7 @@ model WorkoutDay {
   dayOfWeek Int
   plan      WorkoutPlan          @relation(fields: [planId], references: [id])
   exercises WorkoutDayExercise[]
+  sessions WorkoutSession[]
 }
 
 model Exercise {
@@ -144,9 +146,22 @@ model WorkoutDayExercise {
   exercise    Exercise   @relation(fields: [exerciseId], references: [id])
 }
 
+model WorkoutSession {
+  id          String         @id @default(cuid())
+  userId      String
+  workoutDayId String
+  workoutDay  WorkoutDay    @relation(fields: [workoutDayId], references: [id])
+  user        User           @relation(fields: [userId], references: [id])
+  startTime   DateTime       @default(now())
+  endTime     DateTime?
+  notes       String?
+  logs        WorkoutLog[]   // This is the one-to-many relationship
+}
+
 model WorkoutLog {
   id            String   @id @default(cuid())
   userId        String
+  sessionId    String
   exerciseId    String
   performedAt   DateTime @default(now())
   setsCompleted Int
@@ -155,6 +170,7 @@ model WorkoutLog {
   notes         String?
   exercise      Exercise @relation(fields: [exerciseId], references: [id])
   user          User     @relation(fields: [userId], references: [id])
+  session      WorkoutSession @relation(fields: [sessionId], references: [id])
 }
 
 enum MuscleGroup {

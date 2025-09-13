@@ -6,6 +6,8 @@ import workoutLogRoutes from './routes/workout-log/workoutLog.routes';
 import exerciseRoutes from './routes/exercise/exercise.routes'
 import workoutDayRoutes from './routes/workout-day/workoutDay.routes'
 import workoutExerciseRoutes from './routes/workout-exercise/workoutExercise.routes'
+import workoutSessionRoutes from './routes/workout-session/workoutSession.routes';
+
 dotenv.config();
 
 const app = express();
@@ -18,6 +20,7 @@ app.use('/api/workout-logs', workoutLogRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/workout-days', workoutDayRoutes);
 app.use('/api/workout-exercises', workoutExerciseRoutes);
+app.use('/api/workout-sessions', workoutSessionRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

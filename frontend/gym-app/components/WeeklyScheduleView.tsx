@@ -31,11 +31,7 @@ export default function WeeklyScheduleView({ workoutDays, planId }: Props) {
           dayOfWeek,
           exercises: [], // initially empty
         },
-      {
-        headers: {
-          Authorization: `Bearer ${session?.token}`
-        }
-      });
+      );
         const newId = response.data.id;
         const newDay = response.data;
         setDays((prev) => [...prev, newDay]);

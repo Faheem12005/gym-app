@@ -5,6 +5,7 @@ import {
   WorkoutPlanWithRelations,
   WorkoutDayWithRelations,
   Exercise,
+  WorkoutSession,
 } from "@/app/types/generated/zod";
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
@@ -14,7 +15,9 @@ import SessionExerciseView from "@/components/SessionExerciseView";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { useRouter } from "expo-router";
-import { AxiosError } from "axios";
+import { Axios, AxiosError } from "axios";
+import { createWorkoutSession } from "@/services/workoutSessionService";
+import { getCurrentWorkoutDay } from "@/utils/getCurrentWorkoutDay";
 
 interface Props {
   exercise: Exercise;
@@ -26,11 +29,7 @@ interface Props {
   };
 }
 
-function getCurrentWorkoutDay(workoutPlan: WorkoutPlanWithRelations) {
-  const today = new Date().getDay();
-  if (!workoutPlan?.workoutDays) return null;
-  return workoutPlan.workoutDays.find((day) => day.dayOfWeek === today) || null;
-}
+
 
 const getFullExercise = async (
   exercises: any[],
@@ -40,11 +39,7 @@ const getFullExercise = async (
     const results = await Promise.all(
       exercises.map(async (exercise) => {
         try {
-          const response = await api.get(`/exercises/${exercise.exerciseId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const response = await api.get(`/exercises/${exercise.exerciseId}`);
           const exerciseData: Exercise = response.data;
           return {
             exercise: exerciseData,
@@ -95,6 +90,7 @@ export default function RunSession() {
     }[];
   }>({});
 
+
   const removeSet = (exerciseId: string) => {
     setExerciseState((prev) => {
       const sets = prev[exerciseId];
@@ -141,11 +137,10 @@ export default function RunSession() {
       repsPerSet: sets.map((set) => set.reps),
       weightPerSet: sets.map((set) => set.weight),
       noSets: sets.length,
+      sessionId: workoutSession?.id!,
     }));
     try {
-      await api.post(`/workout-logs/create`, reqBody, {
-        headers: { Authorization: `Bearer ${session?.token}` },
-      });
+      await api.post(`/workout-logs/create`, reqBody);
       router.replace("/(session)/view-session/post");
     } catch (error) {
       console.error("Failed to save workout log:", error);
@@ -154,14 +149,37 @@ export default function RunSession() {
     }
   };
 
-  useEffect(() => {
-    if (loading || !storedPlan || !session?.token) return;
+  // Move this hook call to the top-level of the component
+  const [workoutSession, setWorkoutSession, workoutSessionLoading, removeWorkoutSession] = useAsyncStorage<WorkoutSession | undefined>("workoutSessionId");
 
+  useEffect(() => {
+    if (loading || !storedPlan || !session?.token || workoutSessionLoading) return;
     const workoutDay = getCurrentWorkoutDay(storedPlan);
     if (!workoutDay || !workoutDay.exercises) return;
-
     const fetchAndInitialize = async () => {
       try {
+        if(!workoutSession) {
+          const workoutSessionRes = await createWorkoutSession({
+            userId: session.user.id,
+            workoutDayId: workoutDay.id
+          })
+          console.log("Created workout session:", workoutSessionRes);
+          setWorkoutSession(workoutSessionRes);
+        }
+        else {
+          if(workoutSession) {
+            //need to check if workout session is valid for this user and day
+            if(workoutSession.userId !== session.user.id || workoutSession.workoutDayId !== workoutDay.id) {
+              console.error("Invalid workout session:", workoutSession);
+              const workoutSessionRes = await createWorkoutSession({
+                userId: session.user.id,
+                workoutDayId: workoutDay.id
+              });
+              console.log("Created workout session:", workoutSessionRes);
+              setWorkoutSession(workoutSessionRes);
+            }
+          }
+        }
         setExercisesLoading(true);
         const exercises = await getFullExercise(
           workoutDay.exercises,
@@ -185,6 +203,10 @@ export default function RunSession() {
         });
         setExerciseState(initialState);
       } catch (err) {
+        if(err instanceof AxiosError) {
+          console.error("Failed to fetch and initialize exercises:", err.message);
+          return
+        }
         console.error("Failed to fetch and initialize exercises:", err);
       } finally {
         setExercisesLoading(false);
@@ -192,7 +214,7 @@ export default function RunSession() {
     };
 
     fetchAndInitialize();
-  }, [loading, storedPlan, session?.token]);
+  }, [loading, storedPlan, session?.token, workoutSession]);
 
   if (loading || isSaving || exercisesLoading)
     return (

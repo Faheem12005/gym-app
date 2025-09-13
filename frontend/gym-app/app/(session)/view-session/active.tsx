@@ -1,6 +1,7 @@
 import { View, Text, ScrollView } from "react-native";
 import { useAsyncStorage } from "@/hooks/useAsyncStorage";
 import { Spinner } from "@/components/ui/spinner";
+import { AxiosError } from "axios";
 import {
   WorkoutPlanWithRelations,
   WorkoutDayWithRelations,
@@ -15,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { useRouter } from "expo-router";
 import { EditIcon } from "@/components/ui/icon";
+import { createWorkoutSession } from "@/services/workoutSessionService";
 
 interface Props {
   exercise: Exercise;
@@ -40,11 +42,7 @@ const getFullExercise = async (
     const results = await Promise.all(
       exercises.map(async (exercise) => {
         try {
-          const response = await api.get(`/exercises/${exercise.exerciseId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const response = await api.get(`/exercises/${exercise.exerciseId}`);
           const exerciseData: Exercise = response.data;
           return {
             exercise: exerciseData,
@@ -122,7 +120,9 @@ export default function ActiveSession() {
         </ScrollView>
         <Button
           className="bg-blue-500 h-16"
-          onPress={() => router.push("/(session)/view-session/run")}
+          onPress={() => {
+            router.push("/(session)/view-session/run");
+          }}
         >
           <ButtonText className="font-bold text-xl text-white">
             START

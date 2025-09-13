@@ -15,7 +15,7 @@ export interface Props {
   onChange: (values: { sets: number; weight: number; reps: number }) => void;
 }
 
-export default function ExerciseView({
+export default function EditExerciseView({
   exercise,
   values,
   onChange,

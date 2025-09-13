@@ -34,7 +34,9 @@ export const ExerciseScalarFieldEnumSchema = z.enum(['id','name','description','
 
 export const WorkoutDayExerciseScalarFieldEnumSchema = z.enum(['id','dayId','exerciseId','order','sets','reps','weights','restSeconds']);
 
-export const WorkoutLogScalarFieldEnumSchema = z.enum(['id','userId','exerciseId','performedAt','setsCompleted','repsPerSet','weightPerSet','notes']);
+export const WorkoutSessionScalarFieldEnumSchema = z.enum(['id','userId','workoutDayId','startTime','endTime','notes']);
+
+export const WorkoutLogScalarFieldEnumSchema = z.enum(['id','userId','sessionId','exerciseId','performedAt','setsCompleted','repsPerSet','weightPerSet','notes']);
 
 export const SortOrderSchema = z.enum(['asc','desc']);
 
@@ -81,6 +83,7 @@ export type UserRelations = {
   weightLogs: WeightLogWithRelations[];
   workoutLogs: WorkoutLogWithRelations[];
   workoutPlans: WorkoutPlanWithRelations[];
+  workoutSessions: WorkoutSessionWithRelations[];
 };
 
 export type UserWithRelations = z.infer<typeof UserSchema> & UserRelations
@@ -94,6 +97,7 @@ export const UserWithRelationsSchema: z.ZodType<UserWithRelations> = UserSchema.
   weightLogs: z.lazy(() => WeightLogWithRelationsSchema).array(),
   workoutLogs: z.lazy(() => WorkoutLogWithRelationsSchema).array(),
   workoutPlans: z.lazy(() => WorkoutPlanWithRelationsSchema).array(),
+  workoutSessions: z.lazy(() => WorkoutSessionWithRelationsSchema).array(),
 }))
 
 /////////////////////////////////////////
@@ -300,6 +304,7 @@ export type WorkoutDay = z.infer<typeof WorkoutDaySchema>
 export type WorkoutDayRelations = {
   plan: WorkoutPlanWithRelations;
   exercises: WorkoutDayExerciseWithRelations[];
+  sessions: WorkoutSessionWithRelations[];
 };
 
 export type WorkoutDayWithRelations = z.infer<typeof WorkoutDaySchema> & WorkoutDayRelations
@@ -307,6 +312,7 @@ export type WorkoutDayWithRelations = z.infer<typeof WorkoutDaySchema> & Workout
 export const WorkoutDayWithRelationsSchema: z.ZodType<WorkoutDayWithRelations> = WorkoutDaySchema.merge(z.object({
   plan: z.lazy(() => WorkoutPlanWithRelationsSchema),
   exercises: z.lazy(() => WorkoutDayExerciseWithRelationsSchema).array(),
+  sessions: z.lazy(() => WorkoutSessionWithRelationsSchema).array(),
 }))
 
 /////////////////////////////////////////
@@ -374,12 +380,45 @@ export const WorkoutDayExerciseWithRelationsSchema: z.ZodType<WorkoutDayExercise
 }))
 
 /////////////////////////////////////////
+// WORKOUT SESSION SCHEMA
+/////////////////////////////////////////
+
+export const WorkoutSessionSchema = z.object({
+  id: z.string().cuid(),
+  userId: z.string(),
+  workoutDayId: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date().nullable(),
+  notes: z.string().nullable(),
+})
+
+export type WorkoutSession = z.infer<typeof WorkoutSessionSchema>
+
+// WORKOUT SESSION RELATION SCHEMA
+//------------------------------------------------------
+
+export type WorkoutSessionRelations = {
+  workoutDay: WorkoutDayWithRelations;
+  user: UserWithRelations;
+  logs: WorkoutLogWithRelations[];
+};
+
+export type WorkoutSessionWithRelations = z.infer<typeof WorkoutSessionSchema> & WorkoutSessionRelations
+
+export const WorkoutSessionWithRelationsSchema: z.ZodType<WorkoutSessionWithRelations> = WorkoutSessionSchema.merge(z.object({
+  workoutDay: z.lazy(() => WorkoutDayWithRelationsSchema),
+  user: z.lazy(() => UserWithRelationsSchema),
+  logs: z.lazy(() => WorkoutLogWithRelationsSchema).array(),
+}))
+
+/////////////////////////////////////////
 // WORKOUT LOG SCHEMA
 /////////////////////////////////////////
 
 export const WorkoutLogSchema = z.object({
   id: z.string().cuid(),
   userId: z.string(),
+  sessionId: z.string(),
   exerciseId: z.string(),
   performedAt: z.coerce.date(),
   setsCompleted: z.number().int(),
@@ -396,6 +435,7 @@ export type WorkoutLog = z.infer<typeof WorkoutLogSchema>
 export type WorkoutLogRelations = {
   exercise: ExerciseWithRelations;
   user: UserWithRelations;
+  session: WorkoutSessionWithRelations;
 };
 
 export type WorkoutLogWithRelations = z.infer<typeof WorkoutLogSchema> & WorkoutLogRelations
@@ -403,6 +443,7 @@ export type WorkoutLogWithRelations = z.infer<typeof WorkoutLogSchema> & Workout
 export const WorkoutLogWithRelationsSchema: z.ZodType<WorkoutLogWithRelations> = WorkoutLogSchema.merge(z.object({
   exercise: z.lazy(() => ExerciseWithRelationsSchema),
   user: z.lazy(() => UserWithRelationsSchema),
+  session: z.lazy(() => WorkoutSessionWithRelationsSchema),
 }))
 
 /////////////////////////////////////////
@@ -421,6 +462,7 @@ export const UserIncludeSchema: z.ZodType<Prisma.UserInclude> = z.object({
   weightLogs: z.union([z.boolean(),z.lazy(() => WeightLogFindManyArgsSchema)]).optional(),
   workoutLogs: z.union([z.boolean(),z.lazy(() => WorkoutLogFindManyArgsSchema)]).optional(),
   workoutPlans: z.union([z.boolean(),z.lazy(() => WorkoutPlanFindManyArgsSchema)]).optional(),
+  workoutSessions: z.union([z.boolean(),z.lazy(() => WorkoutSessionFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => UserCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
@@ -442,6 +484,7 @@ export const UserCountOutputTypeSelectSchema: z.ZodType<Prisma.UserCountOutputTy
   weightLogs: z.boolean().optional(),
   workoutLogs: z.boolean().optional(),
   workoutPlans: z.boolean().optional(),
+  workoutSessions: z.boolean().optional(),
 }).strict();
 
 export const UserSelectSchema: z.ZodType<Prisma.UserSelect> = z.object({
@@ -463,6 +506,7 @@ export const UserSelectSchema: z.ZodType<Prisma.UserSelect> = z.object({
   weightLogs: z.union([z.boolean(),z.lazy(() => WeightLogFindManyArgsSchema)]).optional(),
   workoutLogs: z.union([z.boolean(),z.lazy(() => WorkoutLogFindManyArgsSchema)]).optional(),
   workoutPlans: z.union([z.boolean(),z.lazy(() => WorkoutPlanFindManyArgsSchema)]).optional(),
+  workoutSessions: z.union([z.boolean(),z.lazy(() => WorkoutSessionFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => UserCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
@@ -628,6 +672,7 @@ export const WorkoutPlanSelectSchema: z.ZodType<Prisma.WorkoutPlanSelect> = z.ob
 export const WorkoutDayIncludeSchema: z.ZodType<Prisma.WorkoutDayInclude> = z.object({
   plan: z.union([z.boolean(),z.lazy(() => WorkoutPlanArgsSchema)]).optional(),
   exercises: z.union([z.boolean(),z.lazy(() => WorkoutDayExerciseFindManyArgsSchema)]).optional(),
+  sessions: z.union([z.boolean(),z.lazy(() => WorkoutSessionFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => WorkoutDayCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
@@ -642,6 +687,7 @@ export const WorkoutDayCountOutputTypeArgsSchema: z.ZodType<Prisma.WorkoutDayCou
 
 export const WorkoutDayCountOutputTypeSelectSchema: z.ZodType<Prisma.WorkoutDayCountOutputTypeSelect> = z.object({
   exercises: z.boolean().optional(),
+  sessions: z.boolean().optional(),
 }).strict();
 
 export const WorkoutDaySelectSchema: z.ZodType<Prisma.WorkoutDaySelect> = z.object({
@@ -651,6 +697,7 @@ export const WorkoutDaySelectSchema: z.ZodType<Prisma.WorkoutDaySelect> = z.obje
   dayOfWeek: z.boolean().optional(),
   plan: z.union([z.boolean(),z.lazy(() => WorkoutPlanArgsSchema)]).optional(),
   exercises: z.union([z.boolean(),z.lazy(() => WorkoutDayExerciseFindManyArgsSchema)]).optional(),
+  sessions: z.union([z.boolean(),z.lazy(() => WorkoutSessionFindManyArgsSchema)]).optional(),
   _count: z.union([z.boolean(),z.lazy(() => WorkoutDayCountOutputTypeArgsSchema)]).optional(),
 }).strict()
 
@@ -717,12 +764,49 @@ export const WorkoutDayExerciseSelectSchema: z.ZodType<Prisma.WorkoutDayExercise
   exercise: z.union([z.boolean(),z.lazy(() => ExerciseArgsSchema)]).optional(),
 }).strict()
 
+// WORKOUT SESSION
+//------------------------------------------------------
+
+export const WorkoutSessionIncludeSchema: z.ZodType<Prisma.WorkoutSessionInclude> = z.object({
+  workoutDay: z.union([z.boolean(),z.lazy(() => WorkoutDayArgsSchema)]).optional(),
+  user: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
+  logs: z.union([z.boolean(),z.lazy(() => WorkoutLogFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => WorkoutSessionCountOutputTypeArgsSchema)]).optional(),
+}).strict()
+
+export const WorkoutSessionArgsSchema: z.ZodType<Prisma.WorkoutSessionDefaultArgs> = z.object({
+  select: z.lazy(() => WorkoutSessionSelectSchema).optional(),
+  include: z.lazy(() => WorkoutSessionIncludeSchema).optional(),
+}).strict();
+
+export const WorkoutSessionCountOutputTypeArgsSchema: z.ZodType<Prisma.WorkoutSessionCountOutputTypeDefaultArgs> = z.object({
+  select: z.lazy(() => WorkoutSessionCountOutputTypeSelectSchema).nullish(),
+}).strict();
+
+export const WorkoutSessionCountOutputTypeSelectSchema: z.ZodType<Prisma.WorkoutSessionCountOutputTypeSelect> = z.object({
+  logs: z.boolean().optional(),
+}).strict();
+
+export const WorkoutSessionSelectSchema: z.ZodType<Prisma.WorkoutSessionSelect> = z.object({
+  id: z.boolean().optional(),
+  userId: z.boolean().optional(),
+  workoutDayId: z.boolean().optional(),
+  startTime: z.boolean().optional(),
+  endTime: z.boolean().optional(),
+  notes: z.boolean().optional(),
+  workoutDay: z.union([z.boolean(),z.lazy(() => WorkoutDayArgsSchema)]).optional(),
+  user: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
+  logs: z.union([z.boolean(),z.lazy(() => WorkoutLogFindManyArgsSchema)]).optional(),
+  _count: z.union([z.boolean(),z.lazy(() => WorkoutSessionCountOutputTypeArgsSchema)]).optional(),
+}).strict()
+
 // WORKOUT LOG
 //------------------------------------------------------
 
 export const WorkoutLogIncludeSchema: z.ZodType<Prisma.WorkoutLogInclude> = z.object({
   exercise: z.union([z.boolean(),z.lazy(() => ExerciseArgsSchema)]).optional(),
   user: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
+  session: z.union([z.boolean(),z.lazy(() => WorkoutSessionArgsSchema)]).optional(),
 }).strict()
 
 export const WorkoutLogArgsSchema: z.ZodType<Prisma.WorkoutLogDefaultArgs> = z.object({
@@ -733,6 +817,7 @@ export const WorkoutLogArgsSchema: z.ZodType<Prisma.WorkoutLogDefaultArgs> = z.o
 export const WorkoutLogSelectSchema: z.ZodType<Prisma.WorkoutLogSelect> = z.object({
   id: z.boolean().optional(),
   userId: z.boolean().optional(),
+  sessionId: z.boolean().optional(),
   exerciseId: z.boolean().optional(),
   performedAt: z.boolean().optional(),
   setsCompleted: z.boolean().optional(),
@@ -741,6 +826,7 @@ export const WorkoutLogSelectSchema: z.ZodType<Prisma.WorkoutLogSelect> = z.obje
   notes: z.boolean().optional(),
   exercise: z.union([z.boolean(),z.lazy(() => ExerciseArgsSchema)]).optional(),
   user: z.union([z.boolean(),z.lazy(() => UserArgsSchema)]).optional(),
+  session: z.union([z.boolean(),z.lazy(() => WorkoutSessionArgsSchema)]).optional(),
 }).strict()
 
 
@@ -769,7 +855,8 @@ export const UserWhereInputSchema: z.ZodType<Prisma.UserWhereInput> = z.object({
   sessions: z.lazy(() => SessionListRelationFilterSchema).optional(),
   weightLogs: z.lazy(() => WeightLogListRelationFilterSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogListRelationFilterSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanListRelationFilterSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanListRelationFilterSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionListRelationFilterSchema).optional()
 }).strict();
 
 export const UserOrderByWithRelationInputSchema: z.ZodType<Prisma.UserOrderByWithRelationInput> = z.object({
@@ -790,7 +877,8 @@ export const UserOrderByWithRelationInputSchema: z.ZodType<Prisma.UserOrderByWit
   sessions: z.lazy(() => SessionOrderByRelationAggregateInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogOrderByRelationAggregateInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogOrderByRelationAggregateInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanOrderByRelationAggregateInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanOrderByRelationAggregateInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionOrderByRelationAggregateInputSchema).optional()
 }).strict();
 
 export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> = z.union([
@@ -842,7 +930,8 @@ export const UserWhereUniqueInputSchema: z.ZodType<Prisma.UserWhereUniqueInput> 
   sessions: z.lazy(() => SessionListRelationFilterSchema).optional(),
   weightLogs: z.lazy(() => WeightLogListRelationFilterSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogListRelationFilterSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanListRelationFilterSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanListRelationFilterSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionListRelationFilterSchema).optional()
 }).strict());
 
 export const UserOrderByWithAggregationInputSchema: z.ZodType<Prisma.UserOrderByWithAggregationInput> = z.object({
@@ -1347,7 +1436,8 @@ export const WorkoutDayWhereInputSchema: z.ZodType<Prisma.WorkoutDayWhereInput> 
   name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   dayOfWeek: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
   plan: z.union([ z.lazy(() => WorkoutPlanScalarRelationFilterSchema),z.lazy(() => WorkoutPlanWhereInputSchema) ]).optional(),
-  exercises: z.lazy(() => WorkoutDayExerciseListRelationFilterSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseListRelationFilterSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionListRelationFilterSchema).optional()
 }).strict();
 
 export const WorkoutDayOrderByWithRelationInputSchema: z.ZodType<Prisma.WorkoutDayOrderByWithRelationInput> = z.object({
@@ -1356,7 +1446,8 @@ export const WorkoutDayOrderByWithRelationInputSchema: z.ZodType<Prisma.WorkoutD
   name: z.lazy(() => SortOrderSchema).optional(),
   dayOfWeek: z.lazy(() => SortOrderSchema).optional(),
   plan: z.lazy(() => WorkoutPlanOrderByWithRelationInputSchema).optional(),
-  exercises: z.lazy(() => WorkoutDayExerciseOrderByRelationAggregateInputSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseOrderByRelationAggregateInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionOrderByRelationAggregateInputSchema).optional()
 }).strict();
 
 export const WorkoutDayWhereUniqueInputSchema: z.ZodType<Prisma.WorkoutDayWhereUniqueInput> = z.object({
@@ -1371,7 +1462,8 @@ export const WorkoutDayWhereUniqueInputSchema: z.ZodType<Prisma.WorkoutDayWhereU
   name: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   dayOfWeek: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
   plan: z.union([ z.lazy(() => WorkoutPlanScalarRelationFilterSchema),z.lazy(() => WorkoutPlanWhereInputSchema) ]).optional(),
-  exercises: z.lazy(() => WorkoutDayExerciseListRelationFilterSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseListRelationFilterSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionListRelationFilterSchema).optional()
 }).strict());
 
 export const WorkoutDayOrderByWithAggregationInputSchema: z.ZodType<Prisma.WorkoutDayOrderByWithAggregationInput> = z.object({
@@ -1543,12 +1635,82 @@ export const WorkoutDayExerciseScalarWhereWithAggregatesInputSchema: z.ZodType<P
   restSeconds: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
 }).strict();
 
+export const WorkoutSessionWhereInputSchema: z.ZodType<Prisma.WorkoutSessionWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => WorkoutSessionWhereInputSchema),z.lazy(() => WorkoutSessionWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => WorkoutSessionWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => WorkoutSessionWhereInputSchema),z.lazy(() => WorkoutSessionWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  userId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  workoutDayId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  startTime: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  endTime: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
+  notes: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  workoutDay: z.union([ z.lazy(() => WorkoutDayScalarRelationFilterSchema),z.lazy(() => WorkoutDayWhereInputSchema) ]).optional(),
+  user: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
+  logs: z.lazy(() => WorkoutLogListRelationFilterSchema).optional()
+}).strict();
+
+export const WorkoutSessionOrderByWithRelationInputSchema: z.ZodType<Prisma.WorkoutSessionOrderByWithRelationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  userId: z.lazy(() => SortOrderSchema).optional(),
+  workoutDayId: z.lazy(() => SortOrderSchema).optional(),
+  startTime: z.lazy(() => SortOrderSchema).optional(),
+  endTime: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  notes: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  workoutDay: z.lazy(() => WorkoutDayOrderByWithRelationInputSchema).optional(),
+  user: z.lazy(() => UserOrderByWithRelationInputSchema).optional(),
+  logs: z.lazy(() => WorkoutLogOrderByRelationAggregateInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionWhereUniqueInputSchema: z.ZodType<Prisma.WorkoutSessionWhereUniqueInput> = z.object({
+  id: z.string().cuid()
+})
+.and(z.object({
+  id: z.string().cuid().optional(),
+  AND: z.union([ z.lazy(() => WorkoutSessionWhereInputSchema),z.lazy(() => WorkoutSessionWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => WorkoutSessionWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => WorkoutSessionWhereInputSchema),z.lazy(() => WorkoutSessionWhereInputSchema).array() ]).optional(),
+  userId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  workoutDayId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  startTime: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  endTime: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
+  notes: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+  workoutDay: z.union([ z.lazy(() => WorkoutDayScalarRelationFilterSchema),z.lazy(() => WorkoutDayWhereInputSchema) ]).optional(),
+  user: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
+  logs: z.lazy(() => WorkoutLogListRelationFilterSchema).optional()
+}).strict());
+
+export const WorkoutSessionOrderByWithAggregationInputSchema: z.ZodType<Prisma.WorkoutSessionOrderByWithAggregationInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  userId: z.lazy(() => SortOrderSchema).optional(),
+  workoutDayId: z.lazy(() => SortOrderSchema).optional(),
+  startTime: z.lazy(() => SortOrderSchema).optional(),
+  endTime: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  notes: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
+  _count: z.lazy(() => WorkoutSessionCountOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => WorkoutSessionMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => WorkoutSessionMinOrderByAggregateInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.WorkoutSessionScalarWhereWithAggregatesInput> = z.object({
+  AND: z.union([ z.lazy(() => WorkoutSessionScalarWhereWithAggregatesInputSchema),z.lazy(() => WorkoutSessionScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => WorkoutSessionScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => WorkoutSessionScalarWhereWithAggregatesInputSchema),z.lazy(() => WorkoutSessionScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  userId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  workoutDayId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  startTime: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  endTime: z.union([ z.lazy(() => DateTimeNullableWithAggregatesFilterSchema),z.coerce.date() ]).optional().nullable(),
+  notes: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
+}).strict();
+
 export const WorkoutLogWhereInputSchema: z.ZodType<Prisma.WorkoutLogWhereInput> = z.object({
   AND: z.union([ z.lazy(() => WorkoutLogWhereInputSchema),z.lazy(() => WorkoutLogWhereInputSchema).array() ]).optional(),
   OR: z.lazy(() => WorkoutLogWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => WorkoutLogWhereInputSchema),z.lazy(() => WorkoutLogWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   userId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  sessionId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   exerciseId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   performedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   setsCompleted: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
@@ -1557,11 +1719,13 @@ export const WorkoutLogWhereInputSchema: z.ZodType<Prisma.WorkoutLogWhereInput> 
   notes: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   exercise: z.union([ z.lazy(() => ExerciseScalarRelationFilterSchema),z.lazy(() => ExerciseWhereInputSchema) ]).optional(),
   user: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
+  session: z.union([ z.lazy(() => WorkoutSessionScalarRelationFilterSchema),z.lazy(() => WorkoutSessionWhereInputSchema) ]).optional(),
 }).strict();
 
 export const WorkoutLogOrderByWithRelationInputSchema: z.ZodType<Prisma.WorkoutLogOrderByWithRelationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
+  sessionId: z.lazy(() => SortOrderSchema).optional(),
   exerciseId: z.lazy(() => SortOrderSchema).optional(),
   performedAt: z.lazy(() => SortOrderSchema).optional(),
   setsCompleted: z.lazy(() => SortOrderSchema).optional(),
@@ -1569,7 +1733,8 @@ export const WorkoutLogOrderByWithRelationInputSchema: z.ZodType<Prisma.WorkoutL
   weightPerSet: z.lazy(() => SortOrderSchema).optional(),
   notes: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   exercise: z.lazy(() => ExerciseOrderByWithRelationInputSchema).optional(),
-  user: z.lazy(() => UserOrderByWithRelationInputSchema).optional()
+  user: z.lazy(() => UserOrderByWithRelationInputSchema).optional(),
+  session: z.lazy(() => WorkoutSessionOrderByWithRelationInputSchema).optional()
 }).strict();
 
 export const WorkoutLogWhereUniqueInputSchema: z.ZodType<Prisma.WorkoutLogWhereUniqueInput> = z.object({
@@ -1581,6 +1746,7 @@ export const WorkoutLogWhereUniqueInputSchema: z.ZodType<Prisma.WorkoutLogWhereU
   OR: z.lazy(() => WorkoutLogWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => WorkoutLogWhereInputSchema),z.lazy(() => WorkoutLogWhereInputSchema).array() ]).optional(),
   userId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  sessionId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   exerciseId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   performedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   setsCompleted: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
@@ -1589,11 +1755,13 @@ export const WorkoutLogWhereUniqueInputSchema: z.ZodType<Prisma.WorkoutLogWhereU
   notes: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   exercise: z.union([ z.lazy(() => ExerciseScalarRelationFilterSchema),z.lazy(() => ExerciseWhereInputSchema) ]).optional(),
   user: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
+  session: z.union([ z.lazy(() => WorkoutSessionScalarRelationFilterSchema),z.lazy(() => WorkoutSessionWhereInputSchema) ]).optional(),
 }).strict());
 
 export const WorkoutLogOrderByWithAggregationInputSchema: z.ZodType<Prisma.WorkoutLogOrderByWithAggregationInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
+  sessionId: z.lazy(() => SortOrderSchema).optional(),
   exerciseId: z.lazy(() => SortOrderSchema).optional(),
   performedAt: z.lazy(() => SortOrderSchema).optional(),
   setsCompleted: z.lazy(() => SortOrderSchema).optional(),
@@ -1613,6 +1781,7 @@ export const WorkoutLogScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Wo
   NOT: z.union([ z.lazy(() => WorkoutLogScalarWhereWithAggregatesInputSchema),z.lazy(() => WorkoutLogScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   userId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
+  sessionId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   exerciseId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   performedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   setsCompleted: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
@@ -1639,7 +1808,8 @@ export const UserCreateInputSchema: z.ZodType<Prisma.UserCreateInput> = z.object
   sessions: z.lazy(() => SessionCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateInputSchema: z.ZodType<Prisma.UserUncheckedCreateInput> = z.object({
@@ -1660,7 +1830,8 @@ export const UserUncheckedCreateInputSchema: z.ZodType<Prisma.UserUncheckedCreat
   sessions: z.lazy(() => SessionUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUpdateInputSchema: z.ZodType<Prisma.UserUpdateInput> = z.object({
@@ -1681,7 +1852,8 @@ export const UserUpdateInputSchema: z.ZodType<Prisma.UserUpdateInput> = z.object
   sessions: z.lazy(() => SessionUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateInputSchema: z.ZodType<Prisma.UserUncheckedUpdateInput> = z.object({
@@ -1702,7 +1874,8 @@ export const UserUncheckedUpdateInputSchema: z.ZodType<Prisma.UserUncheckedUpdat
   sessions: z.lazy(() => SessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserCreateManyInputSchema: z.ZodType<Prisma.UserCreateManyInput> = z.object({
@@ -2188,7 +2361,8 @@ export const WorkoutDayCreateInputSchema: z.ZodType<Prisma.WorkoutDayCreateInput
   name: z.string().optional(),
   dayOfWeek: z.number().int(),
   plan: z.lazy(() => WorkoutPlanCreateNestedOneWithoutWorkoutDaysInputSchema),
-  exercises: z.lazy(() => WorkoutDayExerciseCreateNestedManyWithoutDayInputSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseCreateNestedManyWithoutDayInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutWorkoutDayInputSchema).optional()
 }).strict();
 
 export const WorkoutDayUncheckedCreateInputSchema: z.ZodType<Prisma.WorkoutDayUncheckedCreateInput> = z.object({
@@ -2196,7 +2370,8 @@ export const WorkoutDayUncheckedCreateInputSchema: z.ZodType<Prisma.WorkoutDayUn
   planId: z.string(),
   name: z.string().optional(),
   dayOfWeek: z.number().int(),
-  exercises: z.lazy(() => WorkoutDayExerciseUncheckedCreateNestedManyWithoutDayInputSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseUncheckedCreateNestedManyWithoutDayInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutWorkoutDayInputSchema).optional()
 }).strict();
 
 export const WorkoutDayUpdateInputSchema: z.ZodType<Prisma.WorkoutDayUpdateInput> = z.object({
@@ -2204,7 +2379,8 @@ export const WorkoutDayUpdateInputSchema: z.ZodType<Prisma.WorkoutDayUpdateInput
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   dayOfWeek: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   plan: z.lazy(() => WorkoutPlanUpdateOneRequiredWithoutWorkoutDaysNestedInputSchema).optional(),
-  exercises: z.lazy(() => WorkoutDayExerciseUpdateManyWithoutDayNestedInputSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseUpdateManyWithoutDayNestedInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionUpdateManyWithoutWorkoutDayNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutDayUncheckedUpdateInputSchema: z.ZodType<Prisma.WorkoutDayUncheckedUpdateInput> = z.object({
@@ -2212,7 +2388,8 @@ export const WorkoutDayUncheckedUpdateInputSchema: z.ZodType<Prisma.WorkoutDayUn
   planId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   dayOfWeek: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  exercises: z.lazy(() => WorkoutDayExerciseUncheckedUpdateManyWithoutDayNestedInputSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseUncheckedUpdateManyWithoutDayNestedInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutWorkoutDayNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutDayCreateManyInputSchema: z.ZodType<Prisma.WorkoutDayCreateManyInput> = z.object({
@@ -2380,6 +2557,71 @@ export const WorkoutDayExerciseUncheckedUpdateManyInputSchema: z.ZodType<Prisma.
   restSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
+export const WorkoutSessionCreateInputSchema: z.ZodType<Prisma.WorkoutSessionCreateInput> = z.object({
+  id: z.string().cuid().optional(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  workoutDay: z.lazy(() => WorkoutDayCreateNestedOneWithoutSessionsInputSchema),
+  user: z.lazy(() => UserCreateNestedOneWithoutWorkoutSessionsInputSchema),
+  logs: z.lazy(() => WorkoutLogCreateNestedManyWithoutSessionInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUncheckedCreateInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedCreateInput> = z.object({
+  id: z.string().cuid().optional(),
+  userId: z.string(),
+  workoutDayId: z.string(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  logs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutSessionInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUpdateInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  workoutDay: z.lazy(() => WorkoutDayUpdateOneRequiredWithoutSessionsNestedInputSchema).optional(),
+  user: z.lazy(() => UserUpdateOneRequiredWithoutWorkoutSessionsNestedInputSchema).optional(),
+  logs: z.lazy(() => WorkoutLogUpdateManyWithoutSessionNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUncheckedUpdateInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedUpdateInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  workoutDayId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  logs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutSessionNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionCreateManyInputSchema: z.ZodType<Prisma.WorkoutSessionCreateManyInput> = z.object({
+  id: z.string().cuid().optional(),
+  userId: z.string(),
+  workoutDayId: z.string(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable()
+}).strict();
+
+export const WorkoutSessionUpdateManyMutationInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateManyMutationInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
+export const WorkoutSessionUncheckedUpdateManyInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedUpdateManyInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  workoutDayId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
 export const WorkoutLogCreateInputSchema: z.ZodType<Prisma.WorkoutLogCreateInput> = z.object({
   id: z.string().cuid().optional(),
   performedAt: z.coerce.date().optional(),
@@ -2388,12 +2630,14 @@ export const WorkoutLogCreateInputSchema: z.ZodType<Prisma.WorkoutLogCreateInput
   weightPerSet: z.union([ z.lazy(() => WorkoutLogCreateweightPerSetInputSchema),z.number().array() ]).optional(),
   notes: z.string().optional().nullable(),
   exercise: z.lazy(() => ExerciseCreateNestedOneWithoutWorkoutLogsInputSchema),
-  user: z.lazy(() => UserCreateNestedOneWithoutWorkoutLogsInputSchema)
+  user: z.lazy(() => UserCreateNestedOneWithoutWorkoutLogsInputSchema),
+  session: z.lazy(() => WorkoutSessionCreateNestedOneWithoutLogsInputSchema)
 }).strict();
 
 export const WorkoutLogUncheckedCreateInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedCreateInput> = z.object({
   id: z.string().cuid().optional(),
   userId: z.string(),
+  sessionId: z.string(),
   exerciseId: z.string(),
   performedAt: z.coerce.date().optional(),
   setsCompleted: z.number().int(),
@@ -2410,12 +2654,14 @@ export const WorkoutLogUpdateInputSchema: z.ZodType<Prisma.WorkoutLogUpdateInput
   weightPerSet: z.union([ z.lazy(() => WorkoutLogUpdateweightPerSetInputSchema),z.number().array() ]).optional(),
   notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   exercise: z.lazy(() => ExerciseUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema).optional(),
-  user: z.lazy(() => UserUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema).optional()
+  user: z.lazy(() => UserUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema).optional(),
+  session: z.lazy(() => WorkoutSessionUpdateOneRequiredWithoutLogsNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutLogUncheckedUpdateInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedUpdateInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sessionId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   exerciseId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   performedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   setsCompleted: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
@@ -2427,6 +2673,7 @@ export const WorkoutLogUncheckedUpdateInputSchema: z.ZodType<Prisma.WorkoutLogUn
 export const WorkoutLogCreateManyInputSchema: z.ZodType<Prisma.WorkoutLogCreateManyInput> = z.object({
   id: z.string().cuid().optional(),
   userId: z.string(),
+  sessionId: z.string(),
   exerciseId: z.string(),
   performedAt: z.coerce.date().optional(),
   setsCompleted: z.number().int(),
@@ -2447,6 +2694,7 @@ export const WorkoutLogUpdateManyMutationInputSchema: z.ZodType<Prisma.WorkoutLo
 export const WorkoutLogUncheckedUpdateManyInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedUpdateManyInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sessionId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   exerciseId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   performedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   setsCompleted: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
@@ -2555,6 +2803,12 @@ export const WorkoutPlanListRelationFilterSchema: z.ZodType<Prisma.WorkoutPlanLi
   none: z.lazy(() => WorkoutPlanWhereInputSchema).optional()
 }).strict();
 
+export const WorkoutSessionListRelationFilterSchema: z.ZodType<Prisma.WorkoutSessionListRelationFilter> = z.object({
+  every: z.lazy(() => WorkoutSessionWhereInputSchema).optional(),
+  some: z.lazy(() => WorkoutSessionWhereInputSchema).optional(),
+  none: z.lazy(() => WorkoutSessionWhereInputSchema).optional()
+}).strict();
+
 export const SortOrderInputSchema: z.ZodType<Prisma.SortOrderInput> = z.object({
   sort: z.lazy(() => SortOrderSchema),
   nulls: z.lazy(() => NullsOrderSchema).optional()
@@ -2589,6 +2843,10 @@ export const WorkoutLogOrderByRelationAggregateInputSchema: z.ZodType<Prisma.Wor
 }).strict();
 
 export const WorkoutPlanOrderByRelationAggregateInputSchema: z.ZodType<Prisma.WorkoutPlanOrderByRelationAggregateInput> = z.object({
+  _count: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const WorkoutSessionOrderByRelationAggregateInputSchema: z.ZodType<Prisma.WorkoutSessionOrderByRelationAggregateInput> = z.object({
   _count: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
@@ -3179,6 +3437,33 @@ export const WorkoutDayExerciseSumOrderByAggregateInputSchema: z.ZodType<Prisma.
   restSeconds: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
+export const WorkoutSessionCountOrderByAggregateInputSchema: z.ZodType<Prisma.WorkoutSessionCountOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  userId: z.lazy(() => SortOrderSchema).optional(),
+  workoutDayId: z.lazy(() => SortOrderSchema).optional(),
+  startTime: z.lazy(() => SortOrderSchema).optional(),
+  endTime: z.lazy(() => SortOrderSchema).optional(),
+  notes: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const WorkoutSessionMaxOrderByAggregateInputSchema: z.ZodType<Prisma.WorkoutSessionMaxOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  userId: z.lazy(() => SortOrderSchema).optional(),
+  workoutDayId: z.lazy(() => SortOrderSchema).optional(),
+  startTime: z.lazy(() => SortOrderSchema).optional(),
+  endTime: z.lazy(() => SortOrderSchema).optional(),
+  notes: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
+export const WorkoutSessionMinOrderByAggregateInputSchema: z.ZodType<Prisma.WorkoutSessionMinOrderByAggregateInput> = z.object({
+  id: z.lazy(() => SortOrderSchema).optional(),
+  userId: z.lazy(() => SortOrderSchema).optional(),
+  workoutDayId: z.lazy(() => SortOrderSchema).optional(),
+  startTime: z.lazy(() => SortOrderSchema).optional(),
+  endTime: z.lazy(() => SortOrderSchema).optional(),
+  notes: z.lazy(() => SortOrderSchema).optional()
+}).strict();
+
 export const IntNullableListFilterSchema: z.ZodType<Prisma.IntNullableListFilter> = z.object({
   equals: z.number().array().optional().nullable(),
   has: z.number().optional().nullable(),
@@ -3195,9 +3480,15 @@ export const FloatNullableListFilterSchema: z.ZodType<Prisma.FloatNullableListFi
   isEmpty: z.boolean().optional()
 }).strict();
 
+export const WorkoutSessionScalarRelationFilterSchema: z.ZodType<Prisma.WorkoutSessionScalarRelationFilter> = z.object({
+  is: z.lazy(() => WorkoutSessionWhereInputSchema).optional(),
+  isNot: z.lazy(() => WorkoutSessionWhereInputSchema).optional()
+}).strict();
+
 export const WorkoutLogCountOrderByAggregateInputSchema: z.ZodType<Prisma.WorkoutLogCountOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
+  sessionId: z.lazy(() => SortOrderSchema).optional(),
   exerciseId: z.lazy(() => SortOrderSchema).optional(),
   performedAt: z.lazy(() => SortOrderSchema).optional(),
   setsCompleted: z.lazy(() => SortOrderSchema).optional(),
@@ -3215,6 +3506,7 @@ export const WorkoutLogAvgOrderByAggregateInputSchema: z.ZodType<Prisma.WorkoutL
 export const WorkoutLogMaxOrderByAggregateInputSchema: z.ZodType<Prisma.WorkoutLogMaxOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
+  sessionId: z.lazy(() => SortOrderSchema).optional(),
   exerciseId: z.lazy(() => SortOrderSchema).optional(),
   performedAt: z.lazy(() => SortOrderSchema).optional(),
   setsCompleted: z.lazy(() => SortOrderSchema).optional(),
@@ -3224,6 +3516,7 @@ export const WorkoutLogMaxOrderByAggregateInputSchema: z.ZodType<Prisma.WorkoutL
 export const WorkoutLogMinOrderByAggregateInputSchema: z.ZodType<Prisma.WorkoutLogMinOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
   userId: z.lazy(() => SortOrderSchema).optional(),
+  sessionId: z.lazy(() => SortOrderSchema).optional(),
   exerciseId: z.lazy(() => SortOrderSchema).optional(),
   performedAt: z.lazy(() => SortOrderSchema).optional(),
   setsCompleted: z.lazy(() => SortOrderSchema).optional(),
@@ -3292,6 +3585,13 @@ export const WorkoutPlanCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma
   connect: z.union([ z.lazy(() => WorkoutPlanWhereUniqueInputSchema),z.lazy(() => WorkoutPlanWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
+export const WorkoutSessionCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionCreateNestedManyWithoutUserInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema).array(),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutSessionCreateOrConnectWithoutUserInputSchema),z.lazy(() => WorkoutSessionCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutSessionCreateManyUserInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
 export const AccountUncheckedCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma.AccountUncheckedCreateNestedManyWithoutUserInput> = z.object({
   create: z.union([ z.lazy(() => AccountCreateWithoutUserInputSchema),z.lazy(() => AccountCreateWithoutUserInputSchema).array(),z.lazy(() => AccountUncheckedCreateWithoutUserInputSchema),z.lazy(() => AccountUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => AccountCreateOrConnectWithoutUserInputSchema),z.lazy(() => AccountCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
@@ -3346,6 +3646,13 @@ export const WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema: z.ZodTy
   connectOrCreate: z.union([ z.lazy(() => WorkoutPlanCreateOrConnectWithoutUserInputSchema),z.lazy(() => WorkoutPlanCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
   createMany: z.lazy(() => WorkoutPlanCreateManyUserInputEnvelopeSchema).optional(),
   connect: z.union([ z.lazy(() => WorkoutPlanWhereUniqueInputSchema),z.lazy(() => WorkoutPlanWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
+export const WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedCreateNestedManyWithoutUserInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema).array(),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutSessionCreateOrConnectWithoutUserInputSchema),z.lazy(() => WorkoutSessionCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutSessionCreateManyUserInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
 export const StringFieldUpdateOperationsInputSchema: z.ZodType<Prisma.StringFieldUpdateOperationsInput> = z.object({
@@ -3476,6 +3783,20 @@ export const WorkoutPlanUpdateManyWithoutUserNestedInputSchema: z.ZodType<Prisma
   deleteMany: z.union([ z.lazy(() => WorkoutPlanScalarWhereInputSchema),z.lazy(() => WorkoutPlanScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
+export const WorkoutSessionUpdateManyWithoutUserNestedInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateManyWithoutUserNestedInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema).array(),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutSessionCreateOrConnectWithoutUserInputSchema),z.lazy(() => WorkoutSessionCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => WorkoutSessionUpsertWithWhereUniqueWithoutUserInputSchema),z.lazy(() => WorkoutSessionUpsertWithWhereUniqueWithoutUserInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutSessionCreateManyUserInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => WorkoutSessionUpdateWithWhereUniqueWithoutUserInputSchema),z.lazy(() => WorkoutSessionUpdateWithWhereUniqueWithoutUserInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => WorkoutSessionUpdateManyWithWhereWithoutUserInputSchema),z.lazy(() => WorkoutSessionUpdateManyWithWhereWithoutUserInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => WorkoutSessionScalarWhereInputSchema),z.lazy(() => WorkoutSessionScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
 export const AccountUncheckedUpdateManyWithoutUserNestedInputSchema: z.ZodType<Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput> = z.object({
   create: z.union([ z.lazy(() => AccountCreateWithoutUserInputSchema),z.lazy(() => AccountCreateWithoutUserInputSchema).array(),z.lazy(() => AccountUncheckedCreateWithoutUserInputSchema),z.lazy(() => AccountUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => AccountCreateOrConnectWithoutUserInputSchema),z.lazy(() => AccountCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
@@ -3586,6 +3907,20 @@ export const WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema: z.ZodTy
   update: z.union([ z.lazy(() => WorkoutPlanUpdateWithWhereUniqueWithoutUserInputSchema),z.lazy(() => WorkoutPlanUpdateWithWhereUniqueWithoutUserInputSchema).array() ]).optional(),
   updateMany: z.union([ z.lazy(() => WorkoutPlanUpdateManyWithWhereWithoutUserInputSchema),z.lazy(() => WorkoutPlanUpdateManyWithWhereWithoutUserInputSchema).array() ]).optional(),
   deleteMany: z.union([ z.lazy(() => WorkoutPlanScalarWhereInputSchema),z.lazy(() => WorkoutPlanScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
+export const WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedUpdateManyWithoutUserNestedInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema).array(),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutSessionCreateOrConnectWithoutUserInputSchema),z.lazy(() => WorkoutSessionCreateOrConnectWithoutUserInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => WorkoutSessionUpsertWithWhereUniqueWithoutUserInputSchema),z.lazy(() => WorkoutSessionUpsertWithWhereUniqueWithoutUserInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutSessionCreateManyUserInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => WorkoutSessionUpdateWithWhereUniqueWithoutUserInputSchema),z.lazy(() => WorkoutSessionUpdateWithWhereUniqueWithoutUserInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => WorkoutSessionUpdateManyWithWhereWithoutUserInputSchema),z.lazy(() => WorkoutSessionUpdateManyWithWhereWithoutUserInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => WorkoutSessionScalarWhereInputSchema),z.lazy(() => WorkoutSessionScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
 export const UserCreateNestedOneWithoutAccountsInputSchema: z.ZodType<Prisma.UserCreateNestedOneWithoutAccountsInput> = z.object({
@@ -3764,11 +4099,25 @@ export const WorkoutDayExerciseCreateNestedManyWithoutDayInputSchema: z.ZodType<
   connect: z.union([ z.lazy(() => WorkoutDayExerciseWhereUniqueInputSchema),z.lazy(() => WorkoutDayExerciseWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
+export const WorkoutSessionCreateNestedManyWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionCreateNestedManyWithoutWorkoutDayInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema).array(),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutSessionCreateOrConnectWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionCreateOrConnectWithoutWorkoutDayInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutSessionCreateManyWorkoutDayInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
 export const WorkoutDayExerciseUncheckedCreateNestedManyWithoutDayInputSchema: z.ZodType<Prisma.WorkoutDayExerciseUncheckedCreateNestedManyWithoutDayInput> = z.object({
   create: z.union([ z.lazy(() => WorkoutDayExerciseCreateWithoutDayInputSchema),z.lazy(() => WorkoutDayExerciseCreateWithoutDayInputSchema).array(),z.lazy(() => WorkoutDayExerciseUncheckedCreateWithoutDayInputSchema),z.lazy(() => WorkoutDayExerciseUncheckedCreateWithoutDayInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => WorkoutDayExerciseCreateOrConnectWithoutDayInputSchema),z.lazy(() => WorkoutDayExerciseCreateOrConnectWithoutDayInputSchema).array() ]).optional(),
   createMany: z.lazy(() => WorkoutDayExerciseCreateManyDayInputEnvelopeSchema).optional(),
   connect: z.union([ z.lazy(() => WorkoutDayExerciseWhereUniqueInputSchema),z.lazy(() => WorkoutDayExerciseWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
+export const WorkoutSessionUncheckedCreateNestedManyWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedCreateNestedManyWithoutWorkoutDayInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema).array(),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutSessionCreateOrConnectWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionCreateOrConnectWithoutWorkoutDayInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutSessionCreateManyWorkoutDayInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
 }).strict();
 
 export const WorkoutPlanUpdateOneRequiredWithoutWorkoutDaysNestedInputSchema: z.ZodType<Prisma.WorkoutPlanUpdateOneRequiredWithoutWorkoutDaysNestedInput> = z.object({
@@ -3793,6 +4142,20 @@ export const WorkoutDayExerciseUpdateManyWithoutDayNestedInputSchema: z.ZodType<
   deleteMany: z.union([ z.lazy(() => WorkoutDayExerciseScalarWhereInputSchema),z.lazy(() => WorkoutDayExerciseScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
+export const WorkoutSessionUpdateManyWithoutWorkoutDayNestedInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateManyWithoutWorkoutDayNestedInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema).array(),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutSessionCreateOrConnectWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionCreateOrConnectWithoutWorkoutDayInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => WorkoutSessionUpsertWithWhereUniqueWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUpsertWithWhereUniqueWithoutWorkoutDayInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutSessionCreateManyWorkoutDayInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => WorkoutSessionUpdateWithWhereUniqueWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUpdateWithWhereUniqueWithoutWorkoutDayInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => WorkoutSessionUpdateManyWithWhereWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUpdateManyWithWhereWithoutWorkoutDayInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => WorkoutSessionScalarWhereInputSchema),z.lazy(() => WorkoutSessionScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
 export const WorkoutDayExerciseUncheckedUpdateManyWithoutDayNestedInputSchema: z.ZodType<Prisma.WorkoutDayExerciseUncheckedUpdateManyWithoutDayNestedInput> = z.object({
   create: z.union([ z.lazy(() => WorkoutDayExerciseCreateWithoutDayInputSchema),z.lazy(() => WorkoutDayExerciseCreateWithoutDayInputSchema).array(),z.lazy(() => WorkoutDayExerciseUncheckedCreateWithoutDayInputSchema),z.lazy(() => WorkoutDayExerciseUncheckedCreateWithoutDayInputSchema).array() ]).optional(),
   connectOrCreate: z.union([ z.lazy(() => WorkoutDayExerciseCreateOrConnectWithoutDayInputSchema),z.lazy(() => WorkoutDayExerciseCreateOrConnectWithoutDayInputSchema).array() ]).optional(),
@@ -3805,6 +4168,20 @@ export const WorkoutDayExerciseUncheckedUpdateManyWithoutDayNestedInputSchema: z
   update: z.union([ z.lazy(() => WorkoutDayExerciseUpdateWithWhereUniqueWithoutDayInputSchema),z.lazy(() => WorkoutDayExerciseUpdateWithWhereUniqueWithoutDayInputSchema).array() ]).optional(),
   updateMany: z.union([ z.lazy(() => WorkoutDayExerciseUpdateManyWithWhereWithoutDayInputSchema),z.lazy(() => WorkoutDayExerciseUpdateManyWithWhereWithoutDayInputSchema).array() ]).optional(),
   deleteMany: z.union([ z.lazy(() => WorkoutDayExerciseScalarWhereInputSchema),z.lazy(() => WorkoutDayExerciseScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
+export const WorkoutSessionUncheckedUpdateManyWithoutWorkoutDayNestedInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedUpdateManyWithoutWorkoutDayNestedInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema).array(),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutSessionCreateOrConnectWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionCreateOrConnectWithoutWorkoutDayInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => WorkoutSessionUpsertWithWhereUniqueWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUpsertWithWhereUniqueWithoutWorkoutDayInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutSessionCreateManyWorkoutDayInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => WorkoutSessionWhereUniqueInputSchema),z.lazy(() => WorkoutSessionWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => WorkoutSessionUpdateWithWhereUniqueWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUpdateWithWhereUniqueWithoutWorkoutDayInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => WorkoutSessionUpdateManyWithWhereWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUpdateManyWithWhereWithoutWorkoutDayInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => WorkoutSessionScalarWhereInputSchema),z.lazy(() => WorkoutSessionScalarWhereInputSchema).array() ]).optional(),
 }).strict();
 
 export const ExerciseCreatemuscleGroupsInputSchema: z.ZodType<Prisma.ExerciseCreatemuscleGroupsInput> = z.object({
@@ -3944,6 +4321,76 @@ export const ExerciseUpdateOneRequiredWithoutWorkoutDayLinksNestedInputSchema: z
   update: z.union([ z.lazy(() => ExerciseUpdateToOneWithWhereWithoutWorkoutDayLinksInputSchema),z.lazy(() => ExerciseUpdateWithoutWorkoutDayLinksInputSchema),z.lazy(() => ExerciseUncheckedUpdateWithoutWorkoutDayLinksInputSchema) ]).optional(),
 }).strict();
 
+export const WorkoutDayCreateNestedOneWithoutSessionsInputSchema: z.ZodType<Prisma.WorkoutDayCreateNestedOneWithoutSessionsInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutDayCreateWithoutSessionsInputSchema),z.lazy(() => WorkoutDayUncheckedCreateWithoutSessionsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => WorkoutDayCreateOrConnectWithoutSessionsInputSchema).optional(),
+  connect: z.lazy(() => WorkoutDayWhereUniqueInputSchema).optional()
+}).strict();
+
+export const UserCreateNestedOneWithoutWorkoutSessionsInputSchema: z.ZodType<Prisma.UserCreateNestedOneWithoutWorkoutSessionsInput> = z.object({
+  create: z.union([ z.lazy(() => UserCreateWithoutWorkoutSessionsInputSchema),z.lazy(() => UserUncheckedCreateWithoutWorkoutSessionsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => UserCreateOrConnectWithoutWorkoutSessionsInputSchema).optional(),
+  connect: z.lazy(() => UserWhereUniqueInputSchema).optional()
+}).strict();
+
+export const WorkoutLogCreateNestedManyWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogCreateNestedManyWithoutSessionInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema).array(),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutLogCreateOrConnectWithoutSessionInputSchema),z.lazy(() => WorkoutLogCreateOrConnectWithoutSessionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutLogCreateManySessionInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
+export const WorkoutLogUncheckedCreateNestedManyWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedCreateNestedManyWithoutSessionInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema).array(),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutLogCreateOrConnectWithoutSessionInputSchema),z.lazy(() => WorkoutLogCreateOrConnectWithoutSessionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutLogCreateManySessionInputEnvelopeSchema).optional(),
+  connect: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+}).strict();
+
+export const WorkoutDayUpdateOneRequiredWithoutSessionsNestedInputSchema: z.ZodType<Prisma.WorkoutDayUpdateOneRequiredWithoutSessionsNestedInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutDayCreateWithoutSessionsInputSchema),z.lazy(() => WorkoutDayUncheckedCreateWithoutSessionsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => WorkoutDayCreateOrConnectWithoutSessionsInputSchema).optional(),
+  upsert: z.lazy(() => WorkoutDayUpsertWithoutSessionsInputSchema).optional(),
+  connect: z.lazy(() => WorkoutDayWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => WorkoutDayUpdateToOneWithWhereWithoutSessionsInputSchema),z.lazy(() => WorkoutDayUpdateWithoutSessionsInputSchema),z.lazy(() => WorkoutDayUncheckedUpdateWithoutSessionsInputSchema) ]).optional(),
+}).strict();
+
+export const UserUpdateOneRequiredWithoutWorkoutSessionsNestedInputSchema: z.ZodType<Prisma.UserUpdateOneRequiredWithoutWorkoutSessionsNestedInput> = z.object({
+  create: z.union([ z.lazy(() => UserCreateWithoutWorkoutSessionsInputSchema),z.lazy(() => UserUncheckedCreateWithoutWorkoutSessionsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => UserCreateOrConnectWithoutWorkoutSessionsInputSchema).optional(),
+  upsert: z.lazy(() => UserUpsertWithoutWorkoutSessionsInputSchema).optional(),
+  connect: z.lazy(() => UserWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => UserUpdateToOneWithWhereWithoutWorkoutSessionsInputSchema),z.lazy(() => UserUpdateWithoutWorkoutSessionsInputSchema),z.lazy(() => UserUncheckedUpdateWithoutWorkoutSessionsInputSchema) ]).optional(),
+}).strict();
+
+export const WorkoutLogUpdateManyWithoutSessionNestedInputSchema: z.ZodType<Prisma.WorkoutLogUpdateManyWithoutSessionNestedInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema).array(),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutLogCreateOrConnectWithoutSessionInputSchema),z.lazy(() => WorkoutLogCreateOrConnectWithoutSessionInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => WorkoutLogUpsertWithWhereUniqueWithoutSessionInputSchema),z.lazy(() => WorkoutLogUpsertWithWhereUniqueWithoutSessionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutLogCreateManySessionInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => WorkoutLogUpdateWithWhereUniqueWithoutSessionInputSchema),z.lazy(() => WorkoutLogUpdateWithWhereUniqueWithoutSessionInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => WorkoutLogUpdateManyWithWhereWithoutSessionInputSchema),z.lazy(() => WorkoutLogUpdateManyWithWhereWithoutSessionInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => WorkoutLogScalarWhereInputSchema),z.lazy(() => WorkoutLogScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
+export const WorkoutLogUncheckedUpdateManyWithoutSessionNestedInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedUpdateManyWithoutSessionNestedInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema).array(),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema).array() ]).optional(),
+  connectOrCreate: z.union([ z.lazy(() => WorkoutLogCreateOrConnectWithoutSessionInputSchema),z.lazy(() => WorkoutLogCreateOrConnectWithoutSessionInputSchema).array() ]).optional(),
+  upsert: z.union([ z.lazy(() => WorkoutLogUpsertWithWhereUniqueWithoutSessionInputSchema),z.lazy(() => WorkoutLogUpsertWithWhereUniqueWithoutSessionInputSchema).array() ]).optional(),
+  createMany: z.lazy(() => WorkoutLogCreateManySessionInputEnvelopeSchema).optional(),
+  set: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+  disconnect: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+  delete: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+  connect: z.union([ z.lazy(() => WorkoutLogWhereUniqueInputSchema),z.lazy(() => WorkoutLogWhereUniqueInputSchema).array() ]).optional(),
+  update: z.union([ z.lazy(() => WorkoutLogUpdateWithWhereUniqueWithoutSessionInputSchema),z.lazy(() => WorkoutLogUpdateWithWhereUniqueWithoutSessionInputSchema).array() ]).optional(),
+  updateMany: z.union([ z.lazy(() => WorkoutLogUpdateManyWithWhereWithoutSessionInputSchema),z.lazy(() => WorkoutLogUpdateManyWithWhereWithoutSessionInputSchema).array() ]).optional(),
+  deleteMany: z.union([ z.lazy(() => WorkoutLogScalarWhereInputSchema),z.lazy(() => WorkoutLogScalarWhereInputSchema).array() ]).optional(),
+}).strict();
+
 export const WorkoutLogCreaterepsPerSetInputSchema: z.ZodType<Prisma.WorkoutLogCreaterepsPerSetInput> = z.object({
   set: z.number().array()
 }).strict();
@@ -3962,6 +4409,12 @@ export const UserCreateNestedOneWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.
   create: z.union([ z.lazy(() => UserCreateWithoutWorkoutLogsInputSchema),z.lazy(() => UserUncheckedCreateWithoutWorkoutLogsInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => UserCreateOrConnectWithoutWorkoutLogsInputSchema).optional(),
   connect: z.lazy(() => UserWhereUniqueInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionCreateNestedOneWithoutLogsInputSchema: z.ZodType<Prisma.WorkoutSessionCreateNestedOneWithoutLogsInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutLogsInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutLogsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => WorkoutSessionCreateOrConnectWithoutLogsInputSchema).optional(),
+  connect: z.lazy(() => WorkoutSessionWhereUniqueInputSchema).optional()
 }).strict();
 
 export const WorkoutLogUpdaterepsPerSetInputSchema: z.ZodType<Prisma.WorkoutLogUpdaterepsPerSetInput> = z.object({
@@ -3988,6 +4441,14 @@ export const UserUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema: z.ZodType
   upsert: z.lazy(() => UserUpsertWithoutWorkoutLogsInputSchema).optional(),
   connect: z.lazy(() => UserWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => UserUpdateToOneWithWhereWithoutWorkoutLogsInputSchema),z.lazy(() => UserUpdateWithoutWorkoutLogsInputSchema),z.lazy(() => UserUncheckedUpdateWithoutWorkoutLogsInputSchema) ]).optional(),
+}).strict();
+
+export const WorkoutSessionUpdateOneRequiredWithoutLogsNestedInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateOneRequiredWithoutLogsNestedInput> = z.object({
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutLogsInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutLogsInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => WorkoutSessionCreateOrConnectWithoutLogsInputSchema).optional(),
+  upsert: z.lazy(() => WorkoutSessionUpsertWithoutLogsInputSchema).optional(),
+  connect: z.lazy(() => WorkoutSessionWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => WorkoutSessionUpdateToOneWithWhereWithoutLogsInputSchema),z.lazy(() => WorkoutSessionUpdateWithoutLogsInputSchema),z.lazy(() => WorkoutSessionUncheckedUpdateWithoutLogsInputSchema) ]).optional(),
 }).strict();
 
 export const NestedStringFilterSchema: z.ZodType<Prisma.NestedStringFilter> = z.object({
@@ -4382,11 +4843,13 @@ export const WorkoutLogCreateWithoutUserInputSchema: z.ZodType<Prisma.WorkoutLog
   repsPerSet: z.union([ z.lazy(() => WorkoutLogCreaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
   weightPerSet: z.union([ z.lazy(() => WorkoutLogCreateweightPerSetInputSchema),z.number().array() ]).optional(),
   notes: z.string().optional().nullable(),
-  exercise: z.lazy(() => ExerciseCreateNestedOneWithoutWorkoutLogsInputSchema)
+  exercise: z.lazy(() => ExerciseCreateNestedOneWithoutWorkoutLogsInputSchema),
+  session: z.lazy(() => WorkoutSessionCreateNestedOneWithoutLogsInputSchema)
 }).strict();
 
 export const WorkoutLogUncheckedCreateWithoutUserInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedCreateWithoutUserInput> = z.object({
   id: z.string().cuid().optional(),
+  sessionId: z.string(),
   exerciseId: z.string(),
   performedAt: z.coerce.date().optional(),
   setsCompleted: z.number().int(),
@@ -4428,6 +4891,34 @@ export const WorkoutPlanCreateOrConnectWithoutUserInputSchema: z.ZodType<Prisma.
 
 export const WorkoutPlanCreateManyUserInputEnvelopeSchema: z.ZodType<Prisma.WorkoutPlanCreateManyUserInputEnvelope> = z.object({
   data: z.union([ z.lazy(() => WorkoutPlanCreateManyUserInputSchema),z.lazy(() => WorkoutPlanCreateManyUserInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional()
+}).strict();
+
+export const WorkoutSessionCreateWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionCreateWithoutUserInput> = z.object({
+  id: z.string().cuid().optional(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  workoutDay: z.lazy(() => WorkoutDayCreateNestedOneWithoutSessionsInputSchema),
+  logs: z.lazy(() => WorkoutLogCreateNestedManyWithoutSessionInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUncheckedCreateWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedCreateWithoutUserInput> = z.object({
+  id: z.string().cuid().optional(),
+  workoutDayId: z.string(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  logs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutSessionInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionCreateOrConnectWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionCreateOrConnectWithoutUserInput> = z.object({
+  where: z.lazy(() => WorkoutSessionWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema) ]),
+}).strict();
+
+export const WorkoutSessionCreateManyUserInputEnvelopeSchema: z.ZodType<Prisma.WorkoutSessionCreateManyUserInputEnvelope> = z.object({
+  data: z.union([ z.lazy(() => WorkoutSessionCreateManyUserInputSchema),z.lazy(() => WorkoutSessionCreateManyUserInputSchema).array() ]),
   skipDuplicates: z.boolean().optional()
 }).strict();
 
@@ -4625,6 +5116,7 @@ export const WorkoutLogScalarWhereInputSchema: z.ZodType<Prisma.WorkoutLogScalar
   NOT: z.union([ z.lazy(() => WorkoutLogScalarWhereInputSchema),z.lazy(() => WorkoutLogScalarWhereInputSchema).array() ]).optional(),
   id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   userId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  sessionId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   exerciseId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   performedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   setsCompleted: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
@@ -4660,6 +5152,34 @@ export const WorkoutPlanScalarWhereInputSchema: z.ZodType<Prisma.WorkoutPlanScal
   muscleGroups: z.lazy(() => EnumMuscleGroupNullableListFilterSchema).optional()
 }).strict();
 
+export const WorkoutSessionUpsertWithWhereUniqueWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionUpsertWithWhereUniqueWithoutUserInput> = z.object({
+  where: z.lazy(() => WorkoutSessionWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => WorkoutSessionUpdateWithoutUserInputSchema),z.lazy(() => WorkoutSessionUncheckedUpdateWithoutUserInputSchema) ]),
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutUserInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutUserInputSchema) ]),
+}).strict();
+
+export const WorkoutSessionUpdateWithWhereUniqueWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateWithWhereUniqueWithoutUserInput> = z.object({
+  where: z.lazy(() => WorkoutSessionWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => WorkoutSessionUpdateWithoutUserInputSchema),z.lazy(() => WorkoutSessionUncheckedUpdateWithoutUserInputSchema) ]),
+}).strict();
+
+export const WorkoutSessionUpdateManyWithWhereWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateManyWithWhereWithoutUserInput> = z.object({
+  where: z.lazy(() => WorkoutSessionScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => WorkoutSessionUpdateManyMutationInputSchema),z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserInputSchema) ]),
+}).strict();
+
+export const WorkoutSessionScalarWhereInputSchema: z.ZodType<Prisma.WorkoutSessionScalarWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => WorkoutSessionScalarWhereInputSchema),z.lazy(() => WorkoutSessionScalarWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => WorkoutSessionScalarWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => WorkoutSessionScalarWhereInputSchema),z.lazy(() => WorkoutSessionScalarWhereInputSchema).array() ]).optional(),
+  id: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  userId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  workoutDayId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
+  startTime: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  endTime: z.union([ z.lazy(() => DateTimeNullableFilterSchema),z.coerce.date() ]).optional().nullable(),
+  notes: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
+}).strict();
+
 export const UserCreateWithoutAccountsInputSchema: z.ZodType<Prisma.UserCreateWithoutAccountsInput> = z.object({
   id: z.string().cuid().optional(),
   email: z.string(),
@@ -4677,7 +5197,8 @@ export const UserCreateWithoutAccountsInputSchema: z.ZodType<Prisma.UserCreateWi
   sessions: z.lazy(() => SessionCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateWithoutAccountsInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutAccountsInput> = z.object({
@@ -4697,7 +5218,8 @@ export const UserUncheckedCreateWithoutAccountsInputSchema: z.ZodType<Prisma.Use
   sessions: z.lazy(() => SessionUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserCreateOrConnectWithoutAccountsInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutAccountsInput> = z.object({
@@ -4733,7 +5255,8 @@ export const UserUpdateWithoutAccountsInputSchema: z.ZodType<Prisma.UserUpdateWi
   sessions: z.lazy(() => SessionUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateWithoutAccountsInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutAccountsInput> = z.object({
@@ -4753,7 +5276,8 @@ export const UserUncheckedUpdateWithoutAccountsInputSchema: z.ZodType<Prisma.Use
   sessions: z.lazy(() => SessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserCreateWithoutSessionsInputSchema: z.ZodType<Prisma.UserCreateWithoutSessionsInput> = z.object({
@@ -4773,7 +5297,8 @@ export const UserCreateWithoutSessionsInputSchema: z.ZodType<Prisma.UserCreateWi
   heightLogs: z.lazy(() => HeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateWithoutSessionsInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutSessionsInput> = z.object({
@@ -4793,7 +5318,8 @@ export const UserUncheckedCreateWithoutSessionsInputSchema: z.ZodType<Prisma.Use
   heightLogs: z.lazy(() => HeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserCreateOrConnectWithoutSessionsInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutSessionsInput> = z.object({
@@ -4829,7 +5355,8 @@ export const UserUpdateWithoutSessionsInputSchema: z.ZodType<Prisma.UserUpdateWi
   heightLogs: z.lazy(() => HeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateWithoutSessionsInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutSessionsInput> = z.object({
@@ -4849,7 +5376,8 @@ export const UserUncheckedUpdateWithoutSessionsInputSchema: z.ZodType<Prisma.Use
   heightLogs: z.lazy(() => HeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserCreateWithoutAuthenticatorsInputSchema: z.ZodType<Prisma.UserCreateWithoutAuthenticatorsInput> = z.object({
@@ -4869,7 +5397,8 @@ export const UserCreateWithoutAuthenticatorsInputSchema: z.ZodType<Prisma.UserCr
   sessions: z.lazy(() => SessionCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateWithoutAuthenticatorsInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutAuthenticatorsInput> = z.object({
@@ -4889,7 +5418,8 @@ export const UserUncheckedCreateWithoutAuthenticatorsInputSchema: z.ZodType<Pris
   sessions: z.lazy(() => SessionUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserCreateOrConnectWithoutAuthenticatorsInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutAuthenticatorsInput> = z.object({
@@ -4925,7 +5455,8 @@ export const UserUpdateWithoutAuthenticatorsInputSchema: z.ZodType<Prisma.UserUp
   sessions: z.lazy(() => SessionUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateWithoutAuthenticatorsInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutAuthenticatorsInput> = z.object({
@@ -4945,7 +5476,8 @@ export const UserUncheckedUpdateWithoutAuthenticatorsInputSchema: z.ZodType<Pris
   sessions: z.lazy(() => SessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserCreateWithoutHeightLogsInputSchema: z.ZodType<Prisma.UserCreateWithoutHeightLogsInput> = z.object({
@@ -4965,7 +5497,8 @@ export const UserCreateWithoutHeightLogsInputSchema: z.ZodType<Prisma.UserCreate
   sessions: z.lazy(() => SessionCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateWithoutHeightLogsInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutHeightLogsInput> = z.object({
@@ -4985,7 +5518,8 @@ export const UserUncheckedCreateWithoutHeightLogsInputSchema: z.ZodType<Prisma.U
   sessions: z.lazy(() => SessionUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserCreateOrConnectWithoutHeightLogsInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutHeightLogsInput> = z.object({
@@ -5021,7 +5555,8 @@ export const UserUpdateWithoutHeightLogsInputSchema: z.ZodType<Prisma.UserUpdate
   sessions: z.lazy(() => SessionUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateWithoutHeightLogsInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutHeightLogsInput> = z.object({
@@ -5041,7 +5576,8 @@ export const UserUncheckedUpdateWithoutHeightLogsInputSchema: z.ZodType<Prisma.U
   sessions: z.lazy(() => SessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserCreateWithoutWeightLogsInputSchema: z.ZodType<Prisma.UserCreateWithoutWeightLogsInput> = z.object({
@@ -5061,7 +5597,8 @@ export const UserCreateWithoutWeightLogsInputSchema: z.ZodType<Prisma.UserCreate
   heightLogs: z.lazy(() => HeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   sessions: z.lazy(() => SessionCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateWithoutWeightLogsInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutWeightLogsInput> = z.object({
@@ -5081,7 +5618,8 @@ export const UserUncheckedCreateWithoutWeightLogsInputSchema: z.ZodType<Prisma.U
   heightLogs: z.lazy(() => HeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   sessions: z.lazy(() => SessionUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserCreateOrConnectWithoutWeightLogsInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutWeightLogsInput> = z.object({
@@ -5117,7 +5655,8 @@ export const UserUpdateWithoutWeightLogsInputSchema: z.ZodType<Prisma.UserUpdate
   heightLogs: z.lazy(() => HeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   sessions: z.lazy(() => SessionUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateWithoutWeightLogsInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutWeightLogsInput> = z.object({
@@ -5137,21 +5676,24 @@ export const UserUncheckedUpdateWithoutWeightLogsInputSchema: z.ZodType<Prisma.U
   heightLogs: z.lazy(() => HeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   sessions: z.lazy(() => SessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutDayCreateWithoutPlanInputSchema: z.ZodType<Prisma.WorkoutDayCreateWithoutPlanInput> = z.object({
   id: z.string().cuid().optional(),
   name: z.string().optional(),
   dayOfWeek: z.number().int(),
-  exercises: z.lazy(() => WorkoutDayExerciseCreateNestedManyWithoutDayInputSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseCreateNestedManyWithoutDayInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutWorkoutDayInputSchema).optional()
 }).strict();
 
 export const WorkoutDayUncheckedCreateWithoutPlanInputSchema: z.ZodType<Prisma.WorkoutDayUncheckedCreateWithoutPlanInput> = z.object({
   id: z.string().cuid().optional(),
   name: z.string().optional(),
   dayOfWeek: z.number().int(),
-  exercises: z.lazy(() => WorkoutDayExerciseUncheckedCreateNestedManyWithoutDayInputSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseUncheckedCreateNestedManyWithoutDayInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutWorkoutDayInputSchema).optional()
 }).strict();
 
 export const WorkoutDayCreateOrConnectWithoutPlanInputSchema: z.ZodType<Prisma.WorkoutDayCreateOrConnectWithoutPlanInput> = z.object({
@@ -5181,7 +5723,8 @@ export const UserCreateWithoutWorkoutPlansInputSchema: z.ZodType<Prisma.UserCrea
   heightLogs: z.lazy(() => HeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   sessions: z.lazy(() => SessionCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional()
+  workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateWithoutWorkoutPlansInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutWorkoutPlansInput> = z.object({
@@ -5201,7 +5744,8 @@ export const UserUncheckedCreateWithoutWorkoutPlansInputSchema: z.ZodType<Prisma
   heightLogs: z.lazy(() => HeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   sessions: z.lazy(() => SessionUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserCreateOrConnectWithoutWorkoutPlansInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutWorkoutPlansInput> = z.object({
@@ -5263,7 +5807,8 @@ export const UserUpdateWithoutWorkoutPlansInputSchema: z.ZodType<Prisma.UserUpda
   heightLogs: z.lazy(() => HeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   sessions: z.lazy(() => SessionUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateWithoutWorkoutPlansInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutWorkoutPlansInput> = z.object({
@@ -5283,7 +5828,8 @@ export const UserUncheckedUpdateWithoutWorkoutPlansInputSchema: z.ZodType<Prisma
   heightLogs: z.lazy(() => HeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   sessions: z.lazy(() => SessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutPlanCreateWithoutWorkoutDaysInputSchema: z.ZodType<Prisma.WorkoutPlanCreateWithoutWorkoutDaysInput> = z.object({
@@ -5334,6 +5880,34 @@ export const WorkoutDayExerciseCreateOrConnectWithoutDayInputSchema: z.ZodType<P
 
 export const WorkoutDayExerciseCreateManyDayInputEnvelopeSchema: z.ZodType<Prisma.WorkoutDayExerciseCreateManyDayInputEnvelope> = z.object({
   data: z.union([ z.lazy(() => WorkoutDayExerciseCreateManyDayInputSchema),z.lazy(() => WorkoutDayExerciseCreateManyDayInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional()
+}).strict();
+
+export const WorkoutSessionCreateWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionCreateWithoutWorkoutDayInput> = z.object({
+  id: z.string().cuid().optional(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  user: z.lazy(() => UserCreateNestedOneWithoutWorkoutSessionsInputSchema),
+  logs: z.lazy(() => WorkoutLogCreateNestedManyWithoutSessionInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedCreateWithoutWorkoutDayInput> = z.object({
+  id: z.string().cuid().optional(),
+  userId: z.string(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  logs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutSessionInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionCreateOrConnectWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionCreateOrConnectWithoutWorkoutDayInput> = z.object({
+  where: z.lazy(() => WorkoutSessionWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema) ]),
+}).strict();
+
+export const WorkoutSessionCreateManyWorkoutDayInputEnvelopeSchema: z.ZodType<Prisma.WorkoutSessionCreateManyWorkoutDayInputEnvelope> = z.object({
+  data: z.union([ z.lazy(() => WorkoutSessionCreateManyWorkoutDayInputSchema),z.lazy(() => WorkoutSessionCreateManyWorkoutDayInputSchema).array() ]),
   skipDuplicates: z.boolean().optional()
 }).strict();
 
@@ -5394,6 +5968,22 @@ export const WorkoutDayExerciseScalarWhereInputSchema: z.ZodType<Prisma.WorkoutD
   restSeconds: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
 }).strict();
 
+export const WorkoutSessionUpsertWithWhereUniqueWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionUpsertWithWhereUniqueWithoutWorkoutDayInput> = z.object({
+  where: z.lazy(() => WorkoutSessionWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => WorkoutSessionUpdateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUncheckedUpdateWithoutWorkoutDayInputSchema) ]),
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutWorkoutDayInputSchema) ]),
+}).strict();
+
+export const WorkoutSessionUpdateWithWhereUniqueWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateWithWhereUniqueWithoutWorkoutDayInput> = z.object({
+  where: z.lazy(() => WorkoutSessionWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => WorkoutSessionUpdateWithoutWorkoutDayInputSchema),z.lazy(() => WorkoutSessionUncheckedUpdateWithoutWorkoutDayInputSchema) ]),
+}).strict();
+
+export const WorkoutSessionUpdateManyWithWhereWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateManyWithWhereWithoutWorkoutDayInput> = z.object({
+  where: z.lazy(() => WorkoutSessionScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => WorkoutSessionUpdateManyMutationInputSchema),z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutWorkoutDayInputSchema) ]),
+}).strict();
+
 export const UserCreateWithoutCreatedExercisesInputSchema: z.ZodType<Prisma.UserCreateWithoutCreatedExercisesInput> = z.object({
   id: z.string().cuid().optional(),
   email: z.string(),
@@ -5411,7 +6001,8 @@ export const UserCreateWithoutCreatedExercisesInputSchema: z.ZodType<Prisma.User
   sessions: z.lazy(() => SessionCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateWithoutCreatedExercisesInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutCreatedExercisesInput> = z.object({
@@ -5431,7 +6022,8 @@ export const UserUncheckedCreateWithoutCreatedExercisesInputSchema: z.ZodType<Pr
   sessions: z.lazy(() => SessionUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserCreateOrConnectWithoutCreatedExercisesInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutCreatedExercisesInput> = z.object({
@@ -5476,12 +6068,14 @@ export const WorkoutLogCreateWithoutExerciseInputSchema: z.ZodType<Prisma.Workou
   repsPerSet: z.union([ z.lazy(() => WorkoutLogCreaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
   weightPerSet: z.union([ z.lazy(() => WorkoutLogCreateweightPerSetInputSchema),z.number().array() ]).optional(),
   notes: z.string().optional().nullable(),
-  user: z.lazy(() => UserCreateNestedOneWithoutWorkoutLogsInputSchema)
+  user: z.lazy(() => UserCreateNestedOneWithoutWorkoutLogsInputSchema),
+  session: z.lazy(() => WorkoutSessionCreateNestedOneWithoutLogsInputSchema)
 }).strict();
 
 export const WorkoutLogUncheckedCreateWithoutExerciseInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedCreateWithoutExerciseInput> = z.object({
   id: z.string().cuid().optional(),
   userId: z.string(),
+  sessionId: z.string(),
   performedAt: z.coerce.date().optional(),
   setsCompleted: z.number().int(),
   repsPerSet: z.union([ z.lazy(() => WorkoutLogCreaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
@@ -5527,7 +6121,8 @@ export const UserUpdateWithoutCreatedExercisesInputSchema: z.ZodType<Prisma.User
   sessions: z.lazy(() => SessionUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateWithoutCreatedExercisesInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutCreatedExercisesInput> = z.object({
@@ -5547,7 +6142,8 @@ export const UserUncheckedUpdateWithoutCreatedExercisesInputSchema: z.ZodType<Pr
   sessions: z.lazy(() => SessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutDayExerciseUpsertWithWhereUniqueWithoutExerciseInputSchema: z.ZodType<Prisma.WorkoutDayExerciseUpsertWithWhereUniqueWithoutExerciseInput> = z.object({
@@ -5586,14 +6182,16 @@ export const WorkoutDayCreateWithoutExercisesInputSchema: z.ZodType<Prisma.Worko
   id: z.string().cuid().optional(),
   name: z.string().optional(),
   dayOfWeek: z.number().int(),
-  plan: z.lazy(() => WorkoutPlanCreateNestedOneWithoutWorkoutDaysInputSchema)
+  plan: z.lazy(() => WorkoutPlanCreateNestedOneWithoutWorkoutDaysInputSchema),
+  sessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutWorkoutDayInputSchema).optional()
 }).strict();
 
 export const WorkoutDayUncheckedCreateWithoutExercisesInputSchema: z.ZodType<Prisma.WorkoutDayUncheckedCreateWithoutExercisesInput> = z.object({
   id: z.string().cuid().optional(),
   planId: z.string(),
   name: z.string().optional(),
-  dayOfWeek: z.number().int()
+  dayOfWeek: z.number().int(),
+  sessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutWorkoutDayInputSchema).optional()
 }).strict();
 
 export const WorkoutDayCreateOrConnectWithoutExercisesInputSchema: z.ZodType<Prisma.WorkoutDayCreateOrConnectWithoutExercisesInput> = z.object({
@@ -5641,7 +6239,8 @@ export const WorkoutDayUpdateWithoutExercisesInputSchema: z.ZodType<Prisma.Worko
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   dayOfWeek: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  plan: z.lazy(() => WorkoutPlanUpdateOneRequiredWithoutWorkoutDaysNestedInputSchema).optional()
+  plan: z.lazy(() => WorkoutPlanUpdateOneRequiredWithoutWorkoutDaysNestedInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionUpdateManyWithoutWorkoutDayNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutDayUncheckedUpdateWithoutExercisesInputSchema: z.ZodType<Prisma.WorkoutDayUncheckedUpdateWithoutExercisesInput> = z.object({
@@ -5649,6 +6248,7 @@ export const WorkoutDayUncheckedUpdateWithoutExercisesInputSchema: z.ZodType<Pri
   planId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   dayOfWeek: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  sessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutWorkoutDayNestedInputSchema).optional()
 }).strict();
 
 export const ExerciseUpsertWithoutWorkoutDayLinksInputSchema: z.ZodType<Prisma.ExerciseUpsertWithoutWorkoutDayLinksInput> = z.object({
@@ -5680,6 +6280,202 @@ export const ExerciseUncheckedUpdateWithoutWorkoutDayLinksInputSchema: z.ZodType
   createdById: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   muscleGroups: z.union([ z.lazy(() => ExerciseUpdatemuscleGroupsInputSchema),z.lazy(() => MuscleGroupSchema).array() ]).optional(),
   workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutExerciseNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutDayCreateWithoutSessionsInputSchema: z.ZodType<Prisma.WorkoutDayCreateWithoutSessionsInput> = z.object({
+  id: z.string().cuid().optional(),
+  name: z.string().optional(),
+  dayOfWeek: z.number().int(),
+  plan: z.lazy(() => WorkoutPlanCreateNestedOneWithoutWorkoutDaysInputSchema),
+  exercises: z.lazy(() => WorkoutDayExerciseCreateNestedManyWithoutDayInputSchema).optional()
+}).strict();
+
+export const WorkoutDayUncheckedCreateWithoutSessionsInputSchema: z.ZodType<Prisma.WorkoutDayUncheckedCreateWithoutSessionsInput> = z.object({
+  id: z.string().cuid().optional(),
+  planId: z.string(),
+  name: z.string().optional(),
+  dayOfWeek: z.number().int(),
+  exercises: z.lazy(() => WorkoutDayExerciseUncheckedCreateNestedManyWithoutDayInputSchema).optional()
+}).strict();
+
+export const WorkoutDayCreateOrConnectWithoutSessionsInputSchema: z.ZodType<Prisma.WorkoutDayCreateOrConnectWithoutSessionsInput> = z.object({
+  where: z.lazy(() => WorkoutDayWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => WorkoutDayCreateWithoutSessionsInputSchema),z.lazy(() => WorkoutDayUncheckedCreateWithoutSessionsInputSchema) ]),
+}).strict();
+
+export const UserCreateWithoutWorkoutSessionsInputSchema: z.ZodType<Prisma.UserCreateWithoutWorkoutSessionsInput> = z.object({
+  id: z.string().cuid().optional(),
+  email: z.string(),
+  name: z.string().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  emailVerified: z.coerce.date().optional().nullable(),
+  image: z.string().optional().nullable(),
+  passwordHash: z.string().optional().nullable(),
+  provider: z.string().optional().nullable(),
+  providerId: z.string().optional().nullable(),
+  updatedAt: z.coerce.date().optional(),
+  accounts: z.lazy(() => AccountCreateNestedManyWithoutUserInputSchema).optional(),
+  Authenticators: z.lazy(() => AuthenticatorCreateNestedManyWithoutUserInputSchema).optional(),
+  createdExercises: z.lazy(() => ExerciseCreateNestedManyWithoutCreatedByInputSchema).optional(),
+  heightLogs: z.lazy(() => HeightLogCreateNestedManyWithoutUserInputSchema).optional(),
+  sessions: z.lazy(() => SessionCreateNestedManyWithoutUserInputSchema).optional(),
+  weightLogs: z.lazy(() => WeightLogCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutLogs: z.lazy(() => WorkoutLogCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional()
+}).strict();
+
+export const UserUncheckedCreateWithoutWorkoutSessionsInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutWorkoutSessionsInput> = z.object({
+  id: z.string().cuid().optional(),
+  email: z.string(),
+  name: z.string().optional().nullable(),
+  createdAt: z.coerce.date().optional(),
+  emailVerified: z.coerce.date().optional().nullable(),
+  image: z.string().optional().nullable(),
+  passwordHash: z.string().optional().nullable(),
+  provider: z.string().optional().nullable(),
+  providerId: z.string().optional().nullable(),
+  updatedAt: z.coerce.date().optional(),
+  accounts: z.lazy(() => AccountUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  Authenticators: z.lazy(() => AuthenticatorUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  createdExercises: z.lazy(() => ExerciseUncheckedCreateNestedManyWithoutCreatedByInputSchema).optional(),
+  heightLogs: z.lazy(() => HeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  sessions: z.lazy(() => SessionUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  weightLogs: z.lazy(() => WeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutLogs: z.lazy(() => WorkoutLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+}).strict();
+
+export const UserCreateOrConnectWithoutWorkoutSessionsInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutWorkoutSessionsInput> = z.object({
+  where: z.lazy(() => UserWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => UserCreateWithoutWorkoutSessionsInputSchema),z.lazy(() => UserUncheckedCreateWithoutWorkoutSessionsInputSchema) ]),
+}).strict();
+
+export const WorkoutLogCreateWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogCreateWithoutSessionInput> = z.object({
+  id: z.string().cuid().optional(),
+  performedAt: z.coerce.date().optional(),
+  setsCompleted: z.number().int(),
+  repsPerSet: z.union([ z.lazy(() => WorkoutLogCreaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
+  weightPerSet: z.union([ z.lazy(() => WorkoutLogCreateweightPerSetInputSchema),z.number().array() ]).optional(),
+  notes: z.string().optional().nullable(),
+  exercise: z.lazy(() => ExerciseCreateNestedOneWithoutWorkoutLogsInputSchema),
+  user: z.lazy(() => UserCreateNestedOneWithoutWorkoutLogsInputSchema)
+}).strict();
+
+export const WorkoutLogUncheckedCreateWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedCreateWithoutSessionInput> = z.object({
+  id: z.string().cuid().optional(),
+  userId: z.string(),
+  exerciseId: z.string(),
+  performedAt: z.coerce.date().optional(),
+  setsCompleted: z.number().int(),
+  repsPerSet: z.union([ z.lazy(() => WorkoutLogCreaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
+  weightPerSet: z.union([ z.lazy(() => WorkoutLogCreateweightPerSetInputSchema),z.number().array() ]).optional(),
+  notes: z.string().optional().nullable()
+}).strict();
+
+export const WorkoutLogCreateOrConnectWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogCreateOrConnectWithoutSessionInput> = z.object({
+  where: z.lazy(() => WorkoutLogWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema) ]),
+}).strict();
+
+export const WorkoutLogCreateManySessionInputEnvelopeSchema: z.ZodType<Prisma.WorkoutLogCreateManySessionInputEnvelope> = z.object({
+  data: z.union([ z.lazy(() => WorkoutLogCreateManySessionInputSchema),z.lazy(() => WorkoutLogCreateManySessionInputSchema).array() ]),
+  skipDuplicates: z.boolean().optional()
+}).strict();
+
+export const WorkoutDayUpsertWithoutSessionsInputSchema: z.ZodType<Prisma.WorkoutDayUpsertWithoutSessionsInput> = z.object({
+  update: z.union([ z.lazy(() => WorkoutDayUpdateWithoutSessionsInputSchema),z.lazy(() => WorkoutDayUncheckedUpdateWithoutSessionsInputSchema) ]),
+  create: z.union([ z.lazy(() => WorkoutDayCreateWithoutSessionsInputSchema),z.lazy(() => WorkoutDayUncheckedCreateWithoutSessionsInputSchema) ]),
+  where: z.lazy(() => WorkoutDayWhereInputSchema).optional()
+}).strict();
+
+export const WorkoutDayUpdateToOneWithWhereWithoutSessionsInputSchema: z.ZodType<Prisma.WorkoutDayUpdateToOneWithWhereWithoutSessionsInput> = z.object({
+  where: z.lazy(() => WorkoutDayWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => WorkoutDayUpdateWithoutSessionsInputSchema),z.lazy(() => WorkoutDayUncheckedUpdateWithoutSessionsInputSchema) ]),
+}).strict();
+
+export const WorkoutDayUpdateWithoutSessionsInputSchema: z.ZodType<Prisma.WorkoutDayUpdateWithoutSessionsInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  dayOfWeek: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  plan: z.lazy(() => WorkoutPlanUpdateOneRequiredWithoutWorkoutDaysNestedInputSchema).optional(),
+  exercises: z.lazy(() => WorkoutDayExerciseUpdateManyWithoutDayNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutDayUncheckedUpdateWithoutSessionsInputSchema: z.ZodType<Prisma.WorkoutDayUncheckedUpdateWithoutSessionsInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  planId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  dayOfWeek: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  exercises: z.lazy(() => WorkoutDayExerciseUncheckedUpdateManyWithoutDayNestedInputSchema).optional()
+}).strict();
+
+export const UserUpsertWithoutWorkoutSessionsInputSchema: z.ZodType<Prisma.UserUpsertWithoutWorkoutSessionsInput> = z.object({
+  update: z.union([ z.lazy(() => UserUpdateWithoutWorkoutSessionsInputSchema),z.lazy(() => UserUncheckedUpdateWithoutWorkoutSessionsInputSchema) ]),
+  create: z.union([ z.lazy(() => UserCreateWithoutWorkoutSessionsInputSchema),z.lazy(() => UserUncheckedCreateWithoutWorkoutSessionsInputSchema) ]),
+  where: z.lazy(() => UserWhereInputSchema).optional()
+}).strict();
+
+export const UserUpdateToOneWithWhereWithoutWorkoutSessionsInputSchema: z.ZodType<Prisma.UserUpdateToOneWithWhereWithoutWorkoutSessionsInput> = z.object({
+  where: z.lazy(() => UserWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => UserUpdateWithoutWorkoutSessionsInputSchema),z.lazy(() => UserUncheckedUpdateWithoutWorkoutSessionsInputSchema) ]),
+}).strict();
+
+export const UserUpdateWithoutWorkoutSessionsInputSchema: z.ZodType<Prisma.UserUpdateWithoutWorkoutSessionsInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  emailVerified: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  image: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  passwordHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  provider: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  providerId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  accounts: z.lazy(() => AccountUpdateManyWithoutUserNestedInputSchema).optional(),
+  Authenticators: z.lazy(() => AuthenticatorUpdateManyWithoutUserNestedInputSchema).optional(),
+  createdExercises: z.lazy(() => ExerciseUpdateManyWithoutCreatedByNestedInputSchema).optional(),
+  heightLogs: z.lazy(() => HeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
+  sessions: z.lazy(() => SessionUpdateManyWithoutUserNestedInputSchema).optional(),
+  weightLogs: z.lazy(() => WeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutLogs: z.lazy(() => WorkoutLogUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional()
+}).strict();
+
+export const UserUncheckedUpdateWithoutWorkoutSessionsInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutWorkoutSessionsInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  email: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  name: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  emailVerified: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  image: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  passwordHash: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  provider: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  providerId: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  accounts: z.lazy(() => AccountUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  Authenticators: z.lazy(() => AuthenticatorUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  createdExercises: z.lazy(() => ExerciseUncheckedUpdateManyWithoutCreatedByNestedInputSchema).optional(),
+  heightLogs: z.lazy(() => HeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  sessions: z.lazy(() => SessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  weightLogs: z.lazy(() => WeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutLogs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutLogUpsertWithWhereUniqueWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogUpsertWithWhereUniqueWithoutSessionInput> = z.object({
+  where: z.lazy(() => WorkoutLogWhereUniqueInputSchema),
+  update: z.union([ z.lazy(() => WorkoutLogUpdateWithoutSessionInputSchema),z.lazy(() => WorkoutLogUncheckedUpdateWithoutSessionInputSchema) ]),
+  create: z.union([ z.lazy(() => WorkoutLogCreateWithoutSessionInputSchema),z.lazy(() => WorkoutLogUncheckedCreateWithoutSessionInputSchema) ]),
+}).strict();
+
+export const WorkoutLogUpdateWithWhereUniqueWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogUpdateWithWhereUniqueWithoutSessionInput> = z.object({
+  where: z.lazy(() => WorkoutLogWhereUniqueInputSchema),
+  data: z.union([ z.lazy(() => WorkoutLogUpdateWithoutSessionInputSchema),z.lazy(() => WorkoutLogUncheckedUpdateWithoutSessionInputSchema) ]),
+}).strict();
+
+export const WorkoutLogUpdateManyWithWhereWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogUpdateManyWithWhereWithoutSessionInput> = z.object({
+  where: z.lazy(() => WorkoutLogScalarWhereInputSchema),
+  data: z.union([ z.lazy(() => WorkoutLogUpdateManyMutationInputSchema),z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutSessionInputSchema) ]),
 }).strict();
 
 export const ExerciseCreateWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.ExerciseCreateWithoutWorkoutLogsInput> = z.object({
@@ -5724,7 +6520,8 @@ export const UserCreateWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.UserCreat
   heightLogs: z.lazy(() => HeightLogCreateNestedManyWithoutUserInputSchema).optional(),
   sessions: z.lazy(() => SessionCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserUncheckedCreateWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.UserUncheckedCreateWithoutWorkoutLogsInput> = z.object({
@@ -5744,12 +6541,36 @@ export const UserUncheckedCreateWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.
   heightLogs: z.lazy(() => HeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   sessions: z.lazy(() => SessionUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedCreateNestedManyWithoutUserInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedCreateNestedManyWithoutUserInputSchema).optional()
 }).strict();
 
 export const UserCreateOrConnectWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.UserCreateOrConnectWithoutWorkoutLogsInput> = z.object({
   where: z.lazy(() => UserWhereUniqueInputSchema),
   create: z.union([ z.lazy(() => UserCreateWithoutWorkoutLogsInputSchema),z.lazy(() => UserUncheckedCreateWithoutWorkoutLogsInputSchema) ]),
+}).strict();
+
+export const WorkoutSessionCreateWithoutLogsInputSchema: z.ZodType<Prisma.WorkoutSessionCreateWithoutLogsInput> = z.object({
+  id: z.string().cuid().optional(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  workoutDay: z.lazy(() => WorkoutDayCreateNestedOneWithoutSessionsInputSchema),
+  user: z.lazy(() => UserCreateNestedOneWithoutWorkoutSessionsInputSchema)
+}).strict();
+
+export const WorkoutSessionUncheckedCreateWithoutLogsInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedCreateWithoutLogsInput> = z.object({
+  id: z.string().cuid().optional(),
+  userId: z.string(),
+  workoutDayId: z.string(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable()
+}).strict();
+
+export const WorkoutSessionCreateOrConnectWithoutLogsInputSchema: z.ZodType<Prisma.WorkoutSessionCreateOrConnectWithoutLogsInput> = z.object({
+  where: z.lazy(() => WorkoutSessionWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutLogsInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutLogsInputSchema) ]),
 }).strict();
 
 export const ExerciseUpsertWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.ExerciseUpsertWithoutWorkoutLogsInput> = z.object({
@@ -5811,7 +6632,8 @@ export const UserUpdateWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.UserUpdat
   heightLogs: z.lazy(() => HeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
   sessions: z.lazy(() => SessionUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUpdateManyWithoutUserNestedInputSchema).optional()
 }).strict();
 
 export const UserUncheckedUpdateWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.UserUncheckedUpdateWithoutWorkoutLogsInput> = z.object({
@@ -5831,7 +6653,37 @@ export const UserUncheckedUpdateWithoutWorkoutLogsInputSchema: z.ZodType<Prisma.
   heightLogs: z.lazy(() => HeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   sessions: z.lazy(() => SessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
   weightLogs: z.lazy(() => WeightLogUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
-  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+  workoutPlans: z.lazy(() => WorkoutPlanUncheckedUpdateManyWithoutUserNestedInputSchema).optional(),
+  workoutSessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutUserNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUpsertWithoutLogsInputSchema: z.ZodType<Prisma.WorkoutSessionUpsertWithoutLogsInput> = z.object({
+  update: z.union([ z.lazy(() => WorkoutSessionUpdateWithoutLogsInputSchema),z.lazy(() => WorkoutSessionUncheckedUpdateWithoutLogsInputSchema) ]),
+  create: z.union([ z.lazy(() => WorkoutSessionCreateWithoutLogsInputSchema),z.lazy(() => WorkoutSessionUncheckedCreateWithoutLogsInputSchema) ]),
+  where: z.lazy(() => WorkoutSessionWhereInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUpdateToOneWithWhereWithoutLogsInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateToOneWithWhereWithoutLogsInput> = z.object({
+  where: z.lazy(() => WorkoutSessionWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => WorkoutSessionUpdateWithoutLogsInputSchema),z.lazy(() => WorkoutSessionUncheckedUpdateWithoutLogsInputSchema) ]),
+}).strict();
+
+export const WorkoutSessionUpdateWithoutLogsInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateWithoutLogsInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  workoutDay: z.lazy(() => WorkoutDayUpdateOneRequiredWithoutSessionsNestedInputSchema).optional(),
+  user: z.lazy(() => UserUpdateOneRequiredWithoutWorkoutSessionsNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUncheckedUpdateWithoutLogsInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedUpdateWithoutLogsInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  workoutDayId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const AccountCreateManyUserInputSchema: z.ZodType<Prisma.AccountCreateManyUserInput> = z.object({
@@ -5888,6 +6740,7 @@ export const WeightLogCreateManyUserInputSchema: z.ZodType<Prisma.WeightLogCreat
 
 export const WorkoutLogCreateManyUserInputSchema: z.ZodType<Prisma.WorkoutLogCreateManyUserInput> = z.object({
   id: z.string().cuid().optional(),
+  sessionId: z.string(),
   exerciseId: z.string(),
   performedAt: z.coerce.date().optional(),
   setsCompleted: z.number().int(),
@@ -5901,6 +6754,14 @@ export const WorkoutPlanCreateManyUserInputSchema: z.ZodType<Prisma.WorkoutPlanC
   name: z.string(),
   createdAt: z.coerce.date().optional(),
   muscleGroups: z.union([ z.lazy(() => WorkoutPlanCreatemuscleGroupsInputSchema),z.lazy(() => MuscleGroupSchema).array() ]).optional(),
+}).strict();
+
+export const WorkoutSessionCreateManyUserInputSchema: z.ZodType<Prisma.WorkoutSessionCreateManyUserInput> = z.object({
+  id: z.string().cuid().optional(),
+  workoutDayId: z.string(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable()
 }).strict();
 
 export const AccountUpdateWithoutUserInputSchema: z.ZodType<Prisma.AccountUpdateWithoutUserInput> = z.object({
@@ -6070,11 +6931,13 @@ export const WorkoutLogUpdateWithoutUserInputSchema: z.ZodType<Prisma.WorkoutLog
   repsPerSet: z.union([ z.lazy(() => WorkoutLogUpdaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
   weightPerSet: z.union([ z.lazy(() => WorkoutLogUpdateweightPerSetInputSchema),z.number().array() ]).optional(),
   notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  exercise: z.lazy(() => ExerciseUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema).optional()
+  exercise: z.lazy(() => ExerciseUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema).optional(),
+  session: z.lazy(() => WorkoutSessionUpdateOneRequiredWithoutLogsNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutLogUncheckedUpdateWithoutUserInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedUpdateWithoutUserInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sessionId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   exerciseId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   performedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   setsCompleted: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
@@ -6085,6 +6948,7 @@ export const WorkoutLogUncheckedUpdateWithoutUserInputSchema: z.ZodType<Prisma.W
 
 export const WorkoutLogUncheckedUpdateManyWithoutUserInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedUpdateManyWithoutUserInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sessionId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   exerciseId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   performedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   setsCompleted: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
@@ -6116,6 +6980,32 @@ export const WorkoutPlanUncheckedUpdateManyWithoutUserInputSchema: z.ZodType<Pri
   muscleGroups: z.union([ z.lazy(() => WorkoutPlanUpdatemuscleGroupsInputSchema),z.lazy(() => MuscleGroupSchema).array() ]).optional(),
 }).strict();
 
+export const WorkoutSessionUpdateWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateWithoutUserInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  workoutDay: z.lazy(() => WorkoutDayUpdateOneRequiredWithoutSessionsNestedInputSchema).optional(),
+  logs: z.lazy(() => WorkoutLogUpdateManyWithoutSessionNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUncheckedUpdateWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedUpdateWithoutUserInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  workoutDayId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  logs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutSessionNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUncheckedUpdateManyWithoutUserInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedUpdateManyWithoutUserInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  workoutDayId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
 export const WorkoutDayCreateManyPlanInputSchema: z.ZodType<Prisma.WorkoutDayCreateManyPlanInput> = z.object({
   id: z.string().cuid().optional(),
   name: z.string().optional(),
@@ -6126,14 +7016,16 @@ export const WorkoutDayUpdateWithoutPlanInputSchema: z.ZodType<Prisma.WorkoutDay
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   dayOfWeek: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  exercises: z.lazy(() => WorkoutDayExerciseUpdateManyWithoutDayNestedInputSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseUpdateManyWithoutDayNestedInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionUpdateManyWithoutWorkoutDayNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutDayUncheckedUpdateWithoutPlanInputSchema: z.ZodType<Prisma.WorkoutDayUncheckedUpdateWithoutPlanInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   name: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   dayOfWeek: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  exercises: z.lazy(() => WorkoutDayExerciseUncheckedUpdateManyWithoutDayNestedInputSchema).optional()
+  exercises: z.lazy(() => WorkoutDayExerciseUncheckedUpdateManyWithoutDayNestedInputSchema).optional(),
+  sessions: z.lazy(() => WorkoutSessionUncheckedUpdateManyWithoutWorkoutDayNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutDayUncheckedUpdateManyWithoutPlanInputSchema: z.ZodType<Prisma.WorkoutDayUncheckedUpdateManyWithoutPlanInput> = z.object({
@@ -6150,6 +7042,14 @@ export const WorkoutDayExerciseCreateManyDayInputSchema: z.ZodType<Prisma.Workou
   reps: z.number().int(),
   weights: z.number().optional(),
   restSeconds: z.number().int()
+}).strict();
+
+export const WorkoutSessionCreateManyWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionCreateManyWorkoutDayInput> = z.object({
+  id: z.string().cuid().optional(),
+  userId: z.string(),
+  startTime: z.coerce.date().optional(),
+  endTime: z.coerce.date().optional().nullable(),
+  notes: z.string().optional().nullable()
 }).strict();
 
 export const WorkoutDayExerciseUpdateWithoutDayInputSchema: z.ZodType<Prisma.WorkoutDayExerciseUpdateWithoutDayInput> = z.object({
@@ -6182,6 +7082,32 @@ export const WorkoutDayExerciseUncheckedUpdateManyWithoutDayInputSchema: z.ZodTy
   restSeconds: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
+export const WorkoutSessionUpdateWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionUpdateWithoutWorkoutDayInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  user: z.lazy(() => UserUpdateOneRequiredWithoutWorkoutSessionsNestedInputSchema).optional(),
+  logs: z.lazy(() => WorkoutLogUpdateManyWithoutSessionNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUncheckedUpdateWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedUpdateWithoutWorkoutDayInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  logs: z.lazy(() => WorkoutLogUncheckedUpdateManyWithoutSessionNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutSessionUncheckedUpdateManyWithoutWorkoutDayInputSchema: z.ZodType<Prisma.WorkoutSessionUncheckedUpdateManyWithoutWorkoutDayInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  startTime: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  endTime: z.union([ z.coerce.date(),z.lazy(() => NullableDateTimeFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
 export const WorkoutDayExerciseCreateManyExerciseInputSchema: z.ZodType<Prisma.WorkoutDayExerciseCreateManyExerciseInput> = z.object({
   id: z.string().cuid().optional(),
   dayId: z.string(),
@@ -6195,6 +7121,7 @@ export const WorkoutDayExerciseCreateManyExerciseInputSchema: z.ZodType<Prisma.W
 export const WorkoutLogCreateManyExerciseInputSchema: z.ZodType<Prisma.WorkoutLogCreateManyExerciseInput> = z.object({
   id: z.string().cuid().optional(),
   userId: z.string(),
+  sessionId: z.string(),
   performedAt: z.coerce.date().optional(),
   setsCompleted: z.number().int(),
   repsPerSet: z.union([ z.lazy(() => WorkoutLogCreaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
@@ -6239,12 +7166,14 @@ export const WorkoutLogUpdateWithoutExerciseInputSchema: z.ZodType<Prisma.Workou
   repsPerSet: z.union([ z.lazy(() => WorkoutLogUpdaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
   weightPerSet: z.union([ z.lazy(() => WorkoutLogUpdateweightPerSetInputSchema),z.number().array() ]).optional(),
   notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
-  user: z.lazy(() => UserUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema).optional()
+  user: z.lazy(() => UserUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema).optional(),
+  session: z.lazy(() => WorkoutSessionUpdateOneRequiredWithoutLogsNestedInputSchema).optional()
 }).strict();
 
 export const WorkoutLogUncheckedUpdateWithoutExerciseInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedUpdateWithoutExerciseInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sessionId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   performedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   setsCompleted: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   repsPerSet: z.union([ z.lazy(() => WorkoutLogUpdaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
@@ -6255,6 +7184,51 @@ export const WorkoutLogUncheckedUpdateWithoutExerciseInputSchema: z.ZodType<Pris
 export const WorkoutLogUncheckedUpdateManyWithoutExerciseInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedUpdateManyWithoutExerciseInput> = z.object({
   id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  sessionId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  performedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  setsCompleted: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  repsPerSet: z.union([ z.lazy(() => WorkoutLogUpdaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
+  weightPerSet: z.union([ z.lazy(() => WorkoutLogUpdateweightPerSetInputSchema),z.number().array() ]).optional(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
+export const WorkoutLogCreateManySessionInputSchema: z.ZodType<Prisma.WorkoutLogCreateManySessionInput> = z.object({
+  id: z.string().cuid().optional(),
+  userId: z.string(),
+  exerciseId: z.string(),
+  performedAt: z.coerce.date().optional(),
+  setsCompleted: z.number().int(),
+  repsPerSet: z.union([ z.lazy(() => WorkoutLogCreaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
+  weightPerSet: z.union([ z.lazy(() => WorkoutLogCreateweightPerSetInputSchema),z.number().array() ]).optional(),
+  notes: z.string().optional().nullable()
+}).strict();
+
+export const WorkoutLogUpdateWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogUpdateWithoutSessionInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  performedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  setsCompleted: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  repsPerSet: z.union([ z.lazy(() => WorkoutLogUpdaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
+  weightPerSet: z.union([ z.lazy(() => WorkoutLogUpdateweightPerSetInputSchema),z.number().array() ]).optional(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+  exercise: z.lazy(() => ExerciseUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema).optional(),
+  user: z.lazy(() => UserUpdateOneRequiredWithoutWorkoutLogsNestedInputSchema).optional()
+}).strict();
+
+export const WorkoutLogUncheckedUpdateWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedUpdateWithoutSessionInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  exerciseId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  performedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  setsCompleted: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  repsPerSet: z.union([ z.lazy(() => WorkoutLogUpdaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
+  weightPerSet: z.union([ z.lazy(() => WorkoutLogUpdateweightPerSetInputSchema),z.number().array() ]).optional(),
+  notes: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
+}).strict();
+
+export const WorkoutLogUncheckedUpdateManyWithoutSessionInputSchema: z.ZodType<Prisma.WorkoutLogUncheckedUpdateManyWithoutSessionInput> = z.object({
+  id: z.union([ z.string().cuid(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  userId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
+  exerciseId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   performedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   setsCompleted: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   repsPerSet: z.union([ z.lazy(() => WorkoutLogUpdaterepsPerSetInputSchema),z.number().int().array() ]).optional(),
@@ -6943,6 +7917,68 @@ export const WorkoutDayExerciseFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.Wor
   where: WorkoutDayExerciseWhereUniqueInputSchema,
 }).strict() ;
 
+export const WorkoutSessionFindFirstArgsSchema: z.ZodType<Prisma.WorkoutSessionFindFirstArgs> = z.object({
+  select: WorkoutSessionSelectSchema.optional(),
+  include: WorkoutSessionIncludeSchema.optional(),
+  where: WorkoutSessionWhereInputSchema.optional(),
+  orderBy: z.union([ WorkoutSessionOrderByWithRelationInputSchema.array(),WorkoutSessionOrderByWithRelationInputSchema ]).optional(),
+  cursor: WorkoutSessionWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ WorkoutSessionScalarFieldEnumSchema,WorkoutSessionScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const WorkoutSessionFindFirstOrThrowArgsSchema: z.ZodType<Prisma.WorkoutSessionFindFirstOrThrowArgs> = z.object({
+  select: WorkoutSessionSelectSchema.optional(),
+  include: WorkoutSessionIncludeSchema.optional(),
+  where: WorkoutSessionWhereInputSchema.optional(),
+  orderBy: z.union([ WorkoutSessionOrderByWithRelationInputSchema.array(),WorkoutSessionOrderByWithRelationInputSchema ]).optional(),
+  cursor: WorkoutSessionWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ WorkoutSessionScalarFieldEnumSchema,WorkoutSessionScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const WorkoutSessionFindManyArgsSchema: z.ZodType<Prisma.WorkoutSessionFindManyArgs> = z.object({
+  select: WorkoutSessionSelectSchema.optional(),
+  include: WorkoutSessionIncludeSchema.optional(),
+  where: WorkoutSessionWhereInputSchema.optional(),
+  orderBy: z.union([ WorkoutSessionOrderByWithRelationInputSchema.array(),WorkoutSessionOrderByWithRelationInputSchema ]).optional(),
+  cursor: WorkoutSessionWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ WorkoutSessionScalarFieldEnumSchema,WorkoutSessionScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const WorkoutSessionAggregateArgsSchema: z.ZodType<Prisma.WorkoutSessionAggregateArgs> = z.object({
+  where: WorkoutSessionWhereInputSchema.optional(),
+  orderBy: z.union([ WorkoutSessionOrderByWithRelationInputSchema.array(),WorkoutSessionOrderByWithRelationInputSchema ]).optional(),
+  cursor: WorkoutSessionWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const WorkoutSessionGroupByArgsSchema: z.ZodType<Prisma.WorkoutSessionGroupByArgs> = z.object({
+  where: WorkoutSessionWhereInputSchema.optional(),
+  orderBy: z.union([ WorkoutSessionOrderByWithAggregationInputSchema.array(),WorkoutSessionOrderByWithAggregationInputSchema ]).optional(),
+  by: WorkoutSessionScalarFieldEnumSchema.array(),
+  having: WorkoutSessionScalarWhereWithAggregatesInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+}).strict() ;
+
+export const WorkoutSessionFindUniqueArgsSchema: z.ZodType<Prisma.WorkoutSessionFindUniqueArgs> = z.object({
+  select: WorkoutSessionSelectSchema.optional(),
+  include: WorkoutSessionIncludeSchema.optional(),
+  where: WorkoutSessionWhereUniqueInputSchema,
+}).strict() ;
+
+export const WorkoutSessionFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.WorkoutSessionFindUniqueOrThrowArgs> = z.object({
+  select: WorkoutSessionSelectSchema.optional(),
+  include: WorkoutSessionIncludeSchema.optional(),
+  where: WorkoutSessionWhereUniqueInputSchema,
+}).strict() ;
+
 export const WorkoutLogFindFirstArgsSchema: z.ZodType<Prisma.WorkoutLogFindFirstArgs> = z.object({
   select: WorkoutLogSelectSchema.optional(),
   include: WorkoutLogIncludeSchema.optional(),
@@ -7592,6 +8628,60 @@ export const WorkoutDayExerciseUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.W
 
 export const WorkoutDayExerciseDeleteManyArgsSchema: z.ZodType<Prisma.WorkoutDayExerciseDeleteManyArgs> = z.object({
   where: WorkoutDayExerciseWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const WorkoutSessionCreateArgsSchema: z.ZodType<Prisma.WorkoutSessionCreateArgs> = z.object({
+  select: WorkoutSessionSelectSchema.optional(),
+  include: WorkoutSessionIncludeSchema.optional(),
+  data: z.union([ WorkoutSessionCreateInputSchema,WorkoutSessionUncheckedCreateInputSchema ]),
+}).strict() ;
+
+export const WorkoutSessionUpsertArgsSchema: z.ZodType<Prisma.WorkoutSessionUpsertArgs> = z.object({
+  select: WorkoutSessionSelectSchema.optional(),
+  include: WorkoutSessionIncludeSchema.optional(),
+  where: WorkoutSessionWhereUniqueInputSchema,
+  create: z.union([ WorkoutSessionCreateInputSchema,WorkoutSessionUncheckedCreateInputSchema ]),
+  update: z.union([ WorkoutSessionUpdateInputSchema,WorkoutSessionUncheckedUpdateInputSchema ]),
+}).strict() ;
+
+export const WorkoutSessionCreateManyArgsSchema: z.ZodType<Prisma.WorkoutSessionCreateManyArgs> = z.object({
+  data: z.union([ WorkoutSessionCreateManyInputSchema,WorkoutSessionCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const WorkoutSessionCreateManyAndReturnArgsSchema: z.ZodType<Prisma.WorkoutSessionCreateManyAndReturnArgs> = z.object({
+  data: z.union([ WorkoutSessionCreateManyInputSchema,WorkoutSessionCreateManyInputSchema.array() ]),
+  skipDuplicates: z.boolean().optional(),
+}).strict() ;
+
+export const WorkoutSessionDeleteArgsSchema: z.ZodType<Prisma.WorkoutSessionDeleteArgs> = z.object({
+  select: WorkoutSessionSelectSchema.optional(),
+  include: WorkoutSessionIncludeSchema.optional(),
+  where: WorkoutSessionWhereUniqueInputSchema,
+}).strict() ;
+
+export const WorkoutSessionUpdateArgsSchema: z.ZodType<Prisma.WorkoutSessionUpdateArgs> = z.object({
+  select: WorkoutSessionSelectSchema.optional(),
+  include: WorkoutSessionIncludeSchema.optional(),
+  data: z.union([ WorkoutSessionUpdateInputSchema,WorkoutSessionUncheckedUpdateInputSchema ]),
+  where: WorkoutSessionWhereUniqueInputSchema,
+}).strict() ;
+
+export const WorkoutSessionUpdateManyArgsSchema: z.ZodType<Prisma.WorkoutSessionUpdateManyArgs> = z.object({
+  data: z.union([ WorkoutSessionUpdateManyMutationInputSchema,WorkoutSessionUncheckedUpdateManyInputSchema ]),
+  where: WorkoutSessionWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const WorkoutSessionUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.WorkoutSessionUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ WorkoutSessionUpdateManyMutationInputSchema,WorkoutSessionUncheckedUpdateManyInputSchema ]),
+  where: WorkoutSessionWhereInputSchema.optional(),
+  limit: z.number().optional(),
+}).strict() ;
+
+export const WorkoutSessionDeleteManyArgsSchema: z.ZodType<Prisma.WorkoutSessionDeleteManyArgs> = z.object({
+  where: WorkoutSessionWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 

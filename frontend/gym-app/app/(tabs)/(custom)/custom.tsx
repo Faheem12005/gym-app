@@ -21,11 +21,7 @@ export default function CustomPage() {
   useEffect(() => {
     const fetchWorkoutPlans = async () => {
       try {
-        const response = await api.get("/workout-plans", {
-          headers: {
-            Authorization: `Bearer ${session?.token}`,
-          },
-        });
+        const response = await api.get("/workout-plans");
         setWorkoutPlans(response.data);
       } catch (error) {
         console.error("Error fetching workout plans:", error);
@@ -49,12 +45,6 @@ export default function CustomPage() {
     try {
       const response = await api.post(
         "/workout-plans",
-        {}, // empty body
-        {
-          headers: {
-            Authorization: `Bearer ${session?.token}`,
-          },
-        }
       );
       setWorkoutPlans((prev) => [...prev, response.data]);
       router.push(`/define-plan/${response.data.id}`);

@@ -24,11 +24,7 @@ const getFullExercise = async (exercises: any[], token: string): Promise<Props[]
     const results = await Promise.all(
       exercises.map(async (exercise) => {
         try {
-          const response = await api.get(`/exercises/${exercise.exerciseId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const response = await api.get(`/exercises/${exercise.exerciseId}`);
           const exerciseData: Exercise = response.data;
           return {
             exercise: exerciseData,

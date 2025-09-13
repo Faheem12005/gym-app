@@ -7,7 +7,7 @@ import { Text } from "@/components/ui/text";
 import { Button, ButtonText, ButtonSpinner } from "@/components/ui/button";
 import ExerciseItem from "@/components/ExerciseItem";
 import { useEditDay } from "@/hooks/useEditDay";
-import ExerciseView from "@/components/ExerciseView";
+import EditExerciseView from "@/components/EditExerciseView";
 import { useState } from "react";
 
 export default function EditDayPage() {
@@ -42,7 +42,7 @@ export default function EditDayPage() {
       <Text className="font-semibold text-3xl">Edit Day</Text>
       <ScrollView className="flex-1" contentContainerStyle={{ gap: 12 }}>
         {addedExercises.map((exercise) => (
-          <ExerciseView
+          <EditExerciseView
             key={exercise.exercise.id}
             exercise={exercise.exercise}
             values={{

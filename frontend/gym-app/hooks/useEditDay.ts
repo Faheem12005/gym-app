@@ -32,9 +32,7 @@ export function useEditDay(dayId: string | string[] | undefined, token?: string)
   useEffect(() => {
     const fetchDayExercises = async () => {
       try {
-        const response = await api.get(`/workout-days/${dayId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await api.get(`/workout-days/${dayId}`);
         const orderedExercises: OrderedExercise[] = response.data.exercises.map(
           (item: any) => ({
             exercise: item.exercise,
@@ -57,9 +55,7 @@ export function useEditDay(dayId: string | string[] | undefined, token?: string)
 
     const fetchAllExercises = async () => {
       try {
-        const response = await api.get("/exercises", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await api.get("/exercises");
         setExercises(response.data);
       } catch (error) {
         console.error("Error fetching exercises", error);
@@ -105,7 +101,6 @@ export function useEditDay(dayId: string | string[] | undefined, token?: string)
         await api.post(
           "/workout-exercises",
           { exercises: newExercises, workoutDayId: dayId },
-          { headers: { Authorization: `Bearer ${token}` } }
         );
       }
 
@@ -113,7 +108,6 @@ export function useEditDay(dayId: string | string[] | undefined, token?: string)
         await api.put(
           "/workout-exercises",
           { exercises: existingExercises },
-          { headers: { Authorization: `Bearer ${token}` } }
         );
       }
     } catch (error) {

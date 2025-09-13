@@ -1,18 +1,33 @@
 
 import { useAsyncStorage } from "@/hooks/useAsyncStorage";
 import { Text } from "../ui/text";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box } from "../ui/box";
 import Entypo from "@expo/vector-icons/Entypo";
 import { Button, ButtonIcon, ButtonText } from "../ui/button";
 import ShowPlansModal from "@/components/training/showPlansModal";
 import { WorkoutPlanWithRelations } from "@/app/types/generated/zod";
-import { useRouter } from "expo-router";
+import { useRouter, useSegments } from "expo-router";
+import { checkIfWorkoutSessionExists } from "@/services/workoutSessionService";
+import { getCurrentWorkoutDay } from "@/utils/getCurrentWorkoutDay";
+import { useSession } from "@/auth/authContext";
 
 export default function ViewPlan() {
   const [storedPlan, setStoredPlan, loading] = useAsyncStorage<WorkoutPlanWithRelations | undefined>("plan");
   const [showModal, setShowModal] = useState(false);
   const router = useRouter();
+  const day = getCurrentWorkoutDay(storedPlan!);
+  const [completedToday, setCompletedToday] = useState(false);
+  const { session } = useSession();
+  useEffect(() => {
+    const checkSession = async () => {
+      if (day) {
+        const exists = await checkIfWorkoutSessionExists(session?.user.id!, day.id);
+        setCompletedToday(exists);
+      }
+    };
+    checkSession();
+  }, [day, loading, storedPlan, session?.user.id]);
 
   if (loading) {
     return <Text>Loading...</Text>;
@@ -29,17 +44,34 @@ export default function ViewPlan() {
           setShowModal(false);
         }}
       />
-      <Box className="p-4 h-40 bg-gray-800 rounded-xl flex-row items-center justify-between">
+      <Box className={`p-4 h-40 ${completedToday ? 'bg-emerald-400' : 'bg-gray-800'} rounded-xl flex-row items-center justify-between`}>
         {storedPlan?.id ? (
           <>
+          <Box>
             <Text className="text-white font-medium text-3xl">{storedPlan.name}</Text>
-            <Button onPress={() => router.push('/(session)/view-session/active')} className="h-20">
+            {completedToday && <Text className="text-white">Completed Todays Workout!</Text>}
+          </Box>
+
+            {
+              completedToday ? 
+              <Button onPress={() => router.push('/(session)/view-session/post')} className="h-20">
+                <Entypo
+                  name="check"
+                  size={50}
+                  color="white"
+                />
+              </Button>
+              :             
+              <Button onPress={() => router.push('/(session)/view-session/active')} className="h-20">
               <Entypo
                 name="chevron-with-circle-right"
                 size={50}
                 color="white"
               />
             </Button>
+
+            }
+
           </>
         ) : (
           <>

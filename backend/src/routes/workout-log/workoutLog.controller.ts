@@ -3,6 +3,7 @@ import prisma from '../../../libs/prisma';
 import { z } from 'zod';
 
 const WorkoutLogSchema = z.object({
+  sessionId: z.string(),
   exerciseId: z.string(),
   repsPerSet: z.array(z.number().min(1)),
   weightPerSet: z.array(z.number().min(0)),
@@ -24,6 +25,7 @@ export const createWorkoutLog = async (
         repsPerSet: entry.repsPerSet,
         weightPerSet: entry.weightPerSet,
         setsCompleted: entry.noSets,
+        sessionId: entry.sessionId,
       })),
     });
     res.status(201).json(log);

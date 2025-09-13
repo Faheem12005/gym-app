@@ -18,11 +18,7 @@ export default function CreatePlanPage() {
   useEffect(() => {
     const fetchPlan = async () => {
       try {
-        const response = await api.get(`/workout-plans/${id}`, {
-          headers: {
-            Authorization: `Bearer ${session?.token}`,
-          },
-        });
+        const response = await api.get(`/workout-plans/${id}`);
         setPlan(response.data);
       } catch (error) {
         console.error("Error fetching workout plan:", error);
