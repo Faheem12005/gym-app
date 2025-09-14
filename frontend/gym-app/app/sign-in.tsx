@@ -78,6 +78,10 @@ export default function SignIn() {
           GymIt
         </Text>
         <Text size="2xl" bold className="text-center font-light">AI Powered Workouts.</Text>
+
+        {globalError && (
+          <Text className="text-red-600 text-center">{globalError}</Text>
+        )}
         <FormControl isInvalid={!!emailError}>
           <FormControlLabel>
             <FormControlLabelText>Email</FormControlLabelText>
@@ -135,7 +139,7 @@ export default function SignIn() {
           )}
         </FormControl>
         <Button
-          className="rounded-lg w-full flex-row justify-center items-center bg-black"
+          className="rounded-lg w-full flex-row justify-center items-center bg-black active:bg-gray-700"
           onPress={handleSignIn}
           disabled={loading}
           action="primary"
@@ -149,6 +153,16 @@ export default function SignIn() {
           ) : (
             <ButtonText className="text-white">Sign In</ButtonText>
           )}
+        </Button>
+
+        <Button
+          className="rounded-lg w-full flex-row justify-center items-center border border-gray-300 bg-black active:bg-gray-700"
+          onPress={() => router.push("/create-account")}
+          disabled={loading}
+          variant="outline"
+          size="lg"
+        >
+          <ButtonText className="text-white text-md">Don&apos;t have an account? Create Account</ButtonText>
         </Button>
       </VStack>
     </Box>

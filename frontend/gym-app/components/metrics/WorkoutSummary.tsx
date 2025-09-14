@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getAggMetrics } from "@/services/metrics/metricsService";
 import { Box } from "../ui/box";
 import { Text } from "../ui/text";
+import { useSession } from "@/auth/authContext";
 
 interface AggMetrics {
   totalDuration: number;
@@ -11,14 +12,14 @@ interface AggMetrics {
 
 export default function WorkoutSummary() {
   const [data, setData] = useState<AggMetrics | null>(null);
-
+  const { session } = useSession();
   useEffect(() => {
     const fetchData = async () => {
       const data: AggMetrics = await getAggMetrics();
       setData(data);
     };
     fetchData();
-  }, []);
+  }, [session?.user.id]);
 
   return (
     <Box className="bg-white p-4 rounded-lg shadow-md">

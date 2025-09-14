@@ -1,6 +1,9 @@
 import { use, createContext, type PropsWithChildren } from 'react';
 import { useStorageState } from '@/hooks/useStorageState';
 import api from '@/utils/api';
+import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 export type AuthResponse = {
   user: {
@@ -22,11 +25,13 @@ export type AuthResponse = {
 const AuthContext = createContext<{
   signIn: (email: string, password: string) => void;
   signOut: () => void;
+  clearAllStorage: () => Promise<void>;
   session?: AuthResponse | null;
   isLoading: boolean;
 }>({
   signIn: () => null,
   signOut: () => null,
+  clearAllStorage: async () => {},
   session: null,
   isLoading: false,
 });
@@ -44,6 +49,52 @@ export function useSession() {
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState<AuthResponse>('session');
 
+  const clearAllStorage = async () => {
+    try {
+      // Clear SecureStore items
+      if (Platform.OS !== 'web') {
+        const secureStoreKeys = ['session', 'authToken', 'plan']; // Add any other keys you use
+        await Promise.all(
+          secureStoreKeys.map(async (key) => {
+            try {
+              await SecureStore.deleteItemAsync(key);
+            } catch (error) {
+              console.warn(`Failed to clear SecureStore key ${key}:`, error);
+            }
+          })
+        );
+      }
+
+      // Clear AsyncStorage items  
+      const asyncStorageKeys = ['plan', 'workoutSession', 'userPreferences']; // Add any other keys you use
+      await Promise.all(
+        asyncStorageKeys.map(async (key) => {
+          try {
+            await AsyncStorage.removeItem(key);
+          } catch (error) {
+            console.warn(`Failed to clear AsyncStorage key ${key}:`, error);
+          }
+        })
+      );
+
+      // Clear localStorage (web)
+      if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+        const localStorageKeys = ['session', 'authToken', 'plan', 'workoutSession', 'userPreferences'];
+        localStorageKeys.forEach((key) => {
+          try {
+            localStorage.removeItem(key);
+          } catch (error) {
+            console.warn(`Failed to clear localStorage key ${key}:`, error);
+          }
+        });
+      }
+
+      console.log('All storage cleared successfully');
+    } catch (error) {
+      console.error('Error clearing storage:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -58,9 +109,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
             console.error('Login failed:', error);
           }
         },
-        signOut: () => {
+        signOut: async () => {
           setSession(null);
+          await clearAllStorage();
         },
+        clearAllStorage,
         session,
         isLoading,
       }}>

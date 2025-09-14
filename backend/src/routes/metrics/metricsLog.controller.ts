@@ -4,16 +4,23 @@ import { startOfMonth, endOfMonth } from "date-fns";
 
 export const getAggWorkoutMetricsForUser = async (req: Request, res: Response) => {
   const { userId } = req.user;
+  console.log("Fetching aggregated metrics for user:", userId);
     try {
         const totalDuration = await prisma.workoutSession.aggregate({
             _sum: {
                 duration: true,
+            },
+            where: {
+              userId: userId
             }
         });
         const totalVolume = await prisma.workoutLog.aggregate({
             _sum: {
                 volume: true,
                 setsCompleted: true,
+            },
+            where: {
+              userId: userId
             }
         });
         const userMetrics = {
@@ -21,6 +28,7 @@ export const getAggWorkoutMetricsForUser = async (req: Request, res: Response) =
             totalVolume: totalVolume._sum.volume || 0,
             totalSets: totalVolume._sum.setsCompleted || 0,
         }
+        console.log("Aggregated metrics:", userMetrics);
         res.status(200).json(userMetrics);
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
