@@ -154,6 +154,7 @@ model WorkoutSession {
   user        User           @relation(fields: [userId], references: [id])
   startTime   DateTime       @default(now())
   endTime     DateTime?
+  duration   Int?           // duration in minutes
   notes       String?
   logs        WorkoutLog[]   // This is the one-to-many relationship
 }
@@ -167,6 +168,7 @@ model WorkoutLog {
   setsCompleted Int
   repsPerSet    Int[]
   weightPerSet  Float[]
+  volume       Float?    // total volume = sum of (weight * reps) across all sets
   notes         String?
   exercise      Exercise @relation(fields: [exerciseId], references: [id])
   user          User     @relation(fields: [userId], references: [id])

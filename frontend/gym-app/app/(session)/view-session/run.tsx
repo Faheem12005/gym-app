@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { useRouter } from "expo-router";
 import { Axios, AxiosError } from "axios";
-import { createWorkoutSession } from "@/services/workoutSessionService";
+import { createWorkoutSession } from "@/services/sessions/workoutSessionService";
 import { getCurrentWorkoutDay } from "@/utils/getCurrentWorkoutDay";
 
 interface Props {
@@ -145,6 +145,7 @@ export default function RunSession() {
         pathname: "/(session)/view-session/post/[id]",
         params: { id: workoutSession?.id! }
       });
+      await api.put(`/workout-sessions/${workoutSession?.id}`);
     } catch (error) {
       console.error("Failed to save workout log:", error);
     } finally {

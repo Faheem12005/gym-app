@@ -7,7 +7,7 @@ import { Button, ButtonIcon, ButtonText } from "../ui/button";
 import ShowPlansModal from "@/components/training/showPlansModal";
 import { WorkoutPlanWithRelations } from "@/app/types/generated/zod";
 import { useRouter, useSegments } from "expo-router";
-import { checkIfWorkoutSessionExists } from "@/services/workoutSessionService";
+import { checkIfWorkoutSessionExists } from "@/services/sessions/workoutSessionService";
 import { getCurrentWorkoutDay } from "@/utils/getCurrentWorkoutDay";
 import { useSession } from "@/auth/authContext";
 

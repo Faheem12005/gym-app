@@ -1,7 +1,6 @@
 import { WorkoutSession } from "@/app/types/generated/zod";
 import api from "@/utils/api";
-import { Axios, AxiosError } from "axios";
-
+import { AxiosError } from "axios";
 
 
 export const createWorkoutSession = async (data: {
@@ -58,9 +57,11 @@ export const checkIfWorkoutSessionExists = async (
   }
 };
 
-export const getWorkoutSession = async (id: string) => {
+export const getWorkoutSession = async (id: string, cursor?: string) => {
   try {
-    const response = await api.get(`/workout-sessions/${id}`);
+    const response = await api.get(`/metrics/${id}`, {
+      params: { cursor }
+    });
     return response.data;
   } catch (error: AxiosError | any) {
     console.error("Error fetching workout session:", error.message);

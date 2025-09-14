@@ -92,3 +92,38 @@ export const getWorkoutSessionById = async (req: Request, res: Response) => {
     res.status(500).json({ error: (error as Error).message });
   }
 }
+
+export const updateWorkoutSession = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Get the existing session so we can read its startTime
+    const existing = await prisma.workoutSession.findUnique({
+      where: { id },
+      select: { startTime: true },
+    });
+
+    if (!existing?.startTime) {
+      return res.status(400).json({ error: "Session startTime not found" });
+    }
+
+    const endTime = new Date();
+    const durationMs = endTime.getTime() - existing.startTime.getTime();
+    const durationMinutes = Math.floor(durationMs / 1000 / 60); // store in minutes
+
+    const session = await prisma.workoutSession.update({
+      where: { id },
+      data: {
+        endTime,
+        duration: durationMinutes,
+      },
+    });
+
+    res.status(200).json(session);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.issues });
+    }
+    res.status(500).json({ error: (error as Error).message });
+  }
+};

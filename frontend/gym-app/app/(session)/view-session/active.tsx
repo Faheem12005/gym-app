@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { useRouter } from "expo-router";
 import { EditIcon } from "@/components/ui/icon";
-import { createWorkoutSession } from "@/services/workoutSessionService";
+import { createWorkoutSession } from "@/services/sessions/workoutSessionService";
 
 interface Props {
   exercise: Exercise;
