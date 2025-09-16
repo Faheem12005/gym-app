@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import prisma from '../../../libs/prisma';
+import prisma from '../../libs/prisma';
 import { startOfMonth, endOfMonth } from "date-fns";
 
 export const getAggWorkoutMetricsForUser = async (req: Request, res: Response) => {
-  const { userId } = req.user;
+  const { userId } = req.user!;
   console.log("Fetching aggregated metrics for user:", userId);
     try {
         const totalDuration = await prisma.workoutSession.aggregate({

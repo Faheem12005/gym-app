@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_middleware_1 = require("../../middleware/auth/auth.middleware");
+const workoutExercise_controller_1 = require("./workoutExercise.controller");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.requireAuth);
+router.post('/', workoutExercise_controller_1.addWorkoutDayExercises);
+router.put('/', workoutExercise_controller_1.updateWorkoutDayExercises);
+exports.default = router;

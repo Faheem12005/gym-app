@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_middleware_1 = require("../../middleware/auth/auth.middleware");
+const workoutPlan_controller_1 = require("./workoutPlan.controller");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.requireAuth);
+router.post("/", workoutPlan_controller_1.createWorkoutPlan);
+router.get("/:id", workoutPlan_controller_1.getWorkoutPlan);
+router.get("/", workoutPlan_controller_1.getAllWorkoutPlansForUser);
+router.put("/:id", workoutPlan_controller_1.updateWorkoutPlan);
+router.delete("/:id", workoutPlan_controller_1.deleteWorkoutPlan);
+exports.default = router;

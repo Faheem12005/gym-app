@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import prisma from '../../../libs/prisma';
+import prisma from '../../libs/prisma';
 import { z } from 'zod';
 
 const WorkoutLogSchema = z.object({

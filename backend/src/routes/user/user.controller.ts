@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import prisma from '../../../libs/prisma';
+import prisma from '../../libs/prisma';
 
 export const createUser = async (req: any, res: any) => {
   try {

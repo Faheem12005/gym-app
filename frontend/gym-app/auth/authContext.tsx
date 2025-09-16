@@ -107,6 +107,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
             setSession(response.data);
           } catch(error) {
             console.error('Login failed:', error);
+            throw error;
           }
         },
         signOut: async () => {

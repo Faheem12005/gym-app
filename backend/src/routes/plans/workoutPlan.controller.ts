@@ -1,6 +1,6 @@
 
 import { Request, Response } from 'express';
-import prisma from '../../../libs/prisma';
+import prisma from '../../libs/prisma';
 import { JwtPayload } from 'jsonwebtoken';
 
 type AuthenticatedRequest = Request & {

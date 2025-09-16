@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import prisma from '../../../libs/prisma';
+import prisma from '../../libs/prisma';
 import jwt from 'jsonwebtoken';
 import { groupByFirstLetter } from '../../utils/exerciseUtils';
 

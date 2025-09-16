@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_middleware_1 = require("../../middleware/auth/auth.middleware");
+const metricsLog_controller_1 = require("./metricsLog.controller");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.requireAuth);
+router.get('/:userId', metricsLog_controller_1.getWorkoutSessionsForUser);
+router.get('/', metricsLog_controller_1.getAggWorkoutMetricsForUser);
+exports.default = router;
