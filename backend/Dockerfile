@@ -11,12 +11,17 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm ci
 
-# Copy source code
+# Copy Prisma schema first (needed for prisma generate)
+COPY prisma ./prisma
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy the rest of the backend source code
 COPY . .
 
 # Compile TypeScript
 RUN npm run build
-
 
 # -------- RUNTIME STAGE --------
 FROM node:${NODE_VERSION}-alpine
@@ -35,8 +40,11 @@ RUN npm ci --omit=dev && npm cache clean --force
 # Copy compiled JS from build stage
 COPY --from=build /usr/src/app/dist ./dist
 
-# Copy generated Prisma client
+# Copy generated Prisma client from build stage
 COPY --from=build /usr/src/app/generated ./generated
+
+# Copy Prisma schema (sometimes needed at runtime)
+COPY --from=build /usr/src/app/prisma ./prisma
 
 # Run as non-root user
 USER node
