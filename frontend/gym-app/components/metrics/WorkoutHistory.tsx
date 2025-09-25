@@ -81,7 +81,7 @@ export default function WorkoutHistory() {
           </Box>
         )}
         {!hasMore && (
-          <Text className="p-4 text-center text-gray-500">You've reached the end of your sessions.</Text>
+          <Text className="p-4 text-center text-gray-500">You&apos;ve reached the end of your sessions.</Text>
         )}
       </ScrollView>
     </Box>

@@ -72,14 +72,14 @@ export default function ViewPlan() {
               completedToday ? (
                 <Button
                   onPress={() => router.push('/metrics')}
-                  className="h-20"
+                  className="h-20 bg-emerald-400"
                 >
                   <Entypo name="check" size={50} color="white" />
                 </Button>
               ) : (
                 <Button
                   onPress={() => router.push("/(session)/view-session/active")}
-                  className="h-20"
+                  className="h-20 bg-gray-800"
                 >
                   <Entypo
                     name="chevron-with-circle-right"

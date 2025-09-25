@@ -38,10 +38,12 @@ export const checkIfWorkoutSessionExists = async (
 
     if (data.exists) {
       if (data.session?.startTime) {
-        const startTime = new Date(data.session.startTime);
-        const today = new Date();
-        if (startTime.toDateString() === today.toDateString()) {
-          return true;
+        if (data.session.endTime) {
+          const endTime = new Date(data.session.endTime);
+          const today = new Date();
+          if (endTime.toDateString() === today.toDateString()) {
+            return true;
+          }
         }
       }
     }

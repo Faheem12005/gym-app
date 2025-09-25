@@ -16,7 +16,7 @@ export default function SessionCard({ session }: { session: any }) {
             <Text>{startDate.toLocaleTimeString()}</Text>
             <Text>--</Text>
             <Text>{endDate.toLocaleTimeString()}</Text>
-            <Button onPress={() => setShowDetails(!showDetails)}>
+            <Button className="bg-white" onPress={() => setShowDetails(!showDetails)}>
             <Entypo
                 name={showDetails ? "chevron-up" : "chevron-down"}
                 size={16}

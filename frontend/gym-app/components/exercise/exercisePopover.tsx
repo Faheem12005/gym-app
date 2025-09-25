@@ -30,7 +30,7 @@ const ExercisePopover = ({ exerciseId, removeSet }: Props) => {
       onOpen={handleOpen}
       trigger={(triggerProps) => {
         return (
-          <Button {...triggerProps} size="sm">
+          <Button {...triggerProps} size="sm" className="bg-white">
             <Entypo name="dots-three-vertical" size={14} color="black" />
           </Button>
         );

@@ -79,13 +79,13 @@ export default function CustomPage() {
           </Button>
         ) : (
           <Button
-            className="flex-row items-center bg-app-dark-background gap-2 w-48 absolute bottom-4 right-4 z-10 active:bg-gray-700"
+            className="flex-row items-center bg-gray-800 gap-2 w-48 absolute bottom-4 right-4 z-10 active:bg-gray-700"
             onPress={onCreatePlan}
             size="lg"
             action="primary"
           >
             <AntDesign name="plus" color={Colors.light.background} size={18} />
-            <ButtonText className="text-app-light-background text-sm">
+            <ButtonText className="text-app-light-background text-sm text-white">
               NEW PLAN
             </ButtonText>
           </Button>
@@ -96,7 +96,7 @@ export default function CustomPage() {
           renderItem={({ item }) => (
             <Button
               onPress={() => onPress(item.id)}
-              className="bg-black h-16 w-full rounded-lg justify-center items-center active:bg-gray-800"
+              className="bg-gray-800 h-16 w-full rounded-lg justify-center items-center active:bg-gray-700"
             >
               <Text size="md" bold className="text-white tracking-wide">
                 {item.name}

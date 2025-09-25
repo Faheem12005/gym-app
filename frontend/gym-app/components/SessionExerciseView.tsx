@@ -57,7 +57,7 @@ const SessionExerciseView = ({
     <Box className="bg-white rounded-xl p-4">
       <Box className="flex flex-row justify-between">
         {editable && (
-          <Button onPress={() => showDetails(!details)}>
+          <Button className="bg-white" onPress={() => showDetails(!details)}>
             <Entypo
               name={details ? "chevron-up" : "chevron-down"}
               size={16}
